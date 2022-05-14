@@ -36,6 +36,15 @@ cc_library(
     ],
 )
 
+cc_library(
+    name = "desktop_live_calculators",
+    deps = [
+        "//mediapipe/calculators/core:flow_limiter_calculator",
+        "//mediapipe/modules/face_geometry:env_generator_calculator",
+        "//mediapipe/graphs/face_effect/subgraphs:single_face_geometry_from_landmarks_cpu",
+    ],
+)
+
 mediapipe_binary_graph(
     name = "face_effect_gpu_binary_graph",
     graph = "face_effect_gpu.pbtxt",

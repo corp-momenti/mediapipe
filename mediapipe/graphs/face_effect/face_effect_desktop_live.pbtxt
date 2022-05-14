@@ -1,0 +1,71 @@
+
+# Input image. (ImageFrame)
+input_stream: "input_video"
+
+output_stream: "output_video"
+
+# A list of geometry data for a single detected face. The size of this
+# collection is at most 1 because of the single-face use in this graph.
+# (std::vector<face_geometry::FaceGeometry>)
+#
+# NOTE: if no face is detected at a particular timestamp, there will not be an
+# output packet in the `MULTI_FACE_GEOMETRY` stream for this timestamp. However,
+# the MediaPipe framework will internally inform the downstream calculators of
+# the absence of this packet so that they don't wait for it unnecessarily.
+output_stream: "MULTI_FACE_GEOMETRY:multi_face_geometry"
+
+# Collection of detected/processed faces, each represented as a list of
+# landmarks. (std::vector<NormalizedLandmarkList>)
+output_stream: "multi_smoothed_face_landmarks"
+
+# Throttles the images flowing downstream for flow control. It passes through
+# the very first incoming image unaltered, and waits for downstream nodes
+# (calculators and subgraphs) in the graph to finish their tasks before it
+# passes through another image. All images that come in while waiting are
+# dropped, limiting the number of in-flight images in most part of the graph to
+# 1. This prevents the downstream nodes from queuing up incoming images and data
+# excessively, which leads to increased latency and memory usage, unwanted in
+# real-time mobile applications. It also eliminates unnecessarily computation,
+# e.g., the output produced by a node may get dropped downstream if the
+# subsequent nodes are still busy processing previous inputs.
+node {
+  calculator: "FlowLimiterCalculator"
+  input_stream: "input_video"
+  input_stream: "FINISHED:output_video"
+  input_stream_info: {
+    tag_index: "FINISHED"
+    back_edge: true
+  }
+  output_stream: "throttled_input_video"
+}
+
+# Generates an environment that describes the current virtual scene.
+node {
+  calculator: "FaceGeometryEnvGeneratorCalculator"
+  output_side_packet: "ENVIRONMENT:environment"
+  node_options: {
+    [type.googleapis.com/mediapipe.FaceGeometryEnvGeneratorCalculatorOptions] {
+      environment: {
+        origin_point_location: TOP_LEFT_CORNER
+        perspective_camera: {
+          vertical_fov_degrees: 63.0  # 63 degrees
+          near: 1.0  # 1cm
+          far: 10000.0  # 100m
+        }
+      }
+    }
+  }
+}
+
+# Computes the face geometry for a single face.
+node {
+  calculator: "SingleFaceGeometryFromLandmarksCpu"
+  input_stream: "IMAGE:throttled_input_video"
+  input_side_packet: "ENVIRONMENT:environment"
+  output_stream: "MULTI_FACE_GEOMETRY:multi_face_geometry"
+  output_stream: "multi_face_landmarks"
+  output_stream: "smoothed_face_landmarks"
+  output_stream: "multi_smoothed_face_landmarks"
+  output_stream: "face_landmarks"
+  output_stream: "output_video"
+}

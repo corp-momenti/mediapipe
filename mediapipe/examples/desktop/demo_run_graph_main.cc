@@ -26,9 +26,13 @@
 #include "mediapipe/framework/port/opencv_video_inc.h"
 #include "mediapipe/framework/port/parse_text_proto.h"
 #include "mediapipe/framework/port/status.h"
+#include "mediapipe/framework/formats/landmark.pb.h"
+#include "mediapipe/modules/face_geometry/protos/face_geometry.pb.h"
 
 constexpr char kInputStream[] = "input_video";
 constexpr char kOutputStream[] = "output_video";
+constexpr char kOutputFaceLandmarkStream[] = "multi_face_landmarks";
+constexpr char kOutputFaceGeometryStream[] = "multi_face_geometry";
 constexpr char kWindowName[] = "MediaPipe";
 
 ABSL_FLAG(std::string, calculator_graph_config_file, "",
@@ -79,6 +83,9 @@ absl::Status RunMPPGraph() {
   LOG(INFO) << "Start running the calculator graph.";
   ASSIGN_OR_RETURN(mediapipe::OutputStreamPoller poller,
                    graph.AddOutputStreamPoller(kOutputStream));
+  ASSIGN_OR_RETURN(mediapipe::OutputStreamPoller landmark_poller,
+                   graph.AddOutputStreamPoller(kOutputFaceGeometryStream));
+
   MP_RETURN_IF_ERROR(graph.StartRun({}));
 
   LOG(INFO) << "Start grabbing and processing frames.";
@@ -115,13 +122,69 @@ absl::Status RunMPPGraph() {
         kInputStream, mediapipe::Adopt(input_frame.release())
                           .At(mediapipe::Timestamp(frame_timestamp_us))));
 
-    // Get the graph result packet, or stop if that fails.
-    mediapipe::Packet packet;
-    if (!poller.Next(&packet)) break;
-    auto& output_frame = packet.Get<mediapipe::ImageFrame>();
+    //Get the graph result packet, or stop if that fails.
+    // mediapipe::Packet packet;
+    // if (!poller.Next(&packet)) {
+    //   LOG(INFO) << "No output video packet";
+    //   break;
+    // }
+    // auto& output_frame = packet.Get<mediapipe::ImageFrame>();
 
-    // Convert back to opencv for display or saving.
-    cv::Mat output_frame_mat = mediapipe::formats::MatView(&output_frame);
+    mediapipe::Packet landmark_packet;
+    if (!landmark_poller.Next(&landmark_packet)) {
+      LOG(INFO) << "No landamrk packet";
+      break;
+    } else {
+      //LOG(INFO) << "landamrk packet captured";
+      std::string output_data;
+      absl::StrAppend(&output_data, landmark_packet.Timestamp().Value(), ",");
+    }
+
+    const auto& multiFaceGeometry = landmark_packet.Get<std::vector<::mediapipe::face_geometry::FaceGeometry>>();
+    // printf("Number of face instances with landmarks: %lu",
+    //       multi_face_landmarks.size());
+    // for (int face_index = 0; face_index < multi_face_landmarks.size(); ++face_index) {
+    //   const auto& landmarks = multi_face_landmarks[face_index];
+    //   printf("\tNumber of landmarks for face[%d]: %d", face_index, landmarks.landmark_size());
+    //   for (int i = 0; i < landmarks.landmark_size(); ++i) {
+    //     printf("\t\tLandmark[%d]: (%f, %f, %f)", i, landmarks.landmark(i).x(),
+    //           landmarks.landmark(i).y(), landmarks.landmark(i).z());
+    //   }
+    // }
+        // printf("[TS:%lld] Number of face instances with geometry: %lu ", packet.Timestamp().Value(),
+        //   multiFaceGeometry.size());
+        for (int faceIndex = 0; faceIndex < multiFaceGeometry.size(); ++faceIndex) {
+          const auto& faceGeometry = multiFaceGeometry[faceIndex];
+          printf("\tApprox. distance away from camera for face[%d]: %.6f cm]\n", faceIndex,
+                -faceGeometry.pose_transform_matrix().packed_data(14));
+
+            float pitch = asin(faceGeometry.pose_transform_matrix().packed_data(6));
+            float yaw, roll;
+            if (cos(pitch) > 0.0001) {
+                yaw = atan2(faceGeometry.pose_transform_matrix().packed_data(2), faceGeometry.pose_transform_matrix().packed_data(10));
+                roll = atan2(faceGeometry.pose_transform_matrix().packed_data(4), faceGeometry.pose_transform_matrix().packed_data(5));
+            } else {
+                yaw = 0.0;
+                roll = atan2(-faceGeometry.pose_transform_matrix().packed_data(1), faceGeometry.pose_transform_matrix().packed_data(0));
+            }
+
+            pitch = fmod(((pitch * 180.0 / M_PI) + 360.0), 360.0);
+            yaw = fmod(((yaw * 180.0 / M_PI) + 360.0), 360);
+            roll = fmod(((roll * 180.0 / M_PI) + 360.0), 360);
+
+            printf("pitch [%f], yaw [%f], roll [%f]\n", pitch, yaw, roll);
+            // NSString* info = [NSString stringWithFormat:@"pitch [%f], \nyaw [%f], \nroll [%f]",
+            //                   pitch,
+            //                   yaw,
+            //                   roll];
+            // dispatch_async(dispatch_get_main_queue(), ^{
+            //     [_captureInfo setText:info];
+            // });
+
+        }
+
+    //Convert back to opencv for display or saving.
+    cv::Mat output_frame_mat = camera_frame;//mediapipe::formats::MatView(&output_frame);
     cv::cvtColor(output_frame_mat, output_frame_mat, cv::COLOR_RGB2BGR);
     if (save_video) {
       if (!writer.isOpened()) {

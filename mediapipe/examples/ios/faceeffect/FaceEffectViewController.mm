@@ -25,12 +25,14 @@
 #include "mediapipe/framework/formats/matrix_data.pb.h"
 #include "mediapipe/framework/calculator_framework.h"
 #include "mediapipe/modules/face_geometry/protos/face_geometry.pb.h"
+#include "mediapipe/framework/formats/landmark.pb.h"
 
 static NSString* const kGraphName = @"face_effect_gpu";
 
 static const char* kInputStream = "input_video";
 static const char* kOutputStream = "output_video";
 static const char* kMultiFaceGeometryStream = "multi_face_geometry";
+static const char* kMultiFaceLandmark = "multi_smoothed_face_landmarks";
 static const char* kVideoQueueLabel = "com.google.mediapipe.example.videoQueue";
 static const char* kSelectedEffectIdInputStream = "selected_effect_id";
 static const char* kUseFaceDetectionInputSourceInputSidePacket = "use_face_detection_input_source";
@@ -62,6 +64,9 @@ static const int kSelectedEffectIdGlasses = 2;
   IBOutlet UILabel* _noCameraLabel;
   /// Inform the user about how to switch between effects.
   UILabel* _effectSwitchingHintLabel;
+    
+  IBOutlet UILabel* _captureInfo;
+    
   /// Display the camera preview frames.
   IBOutlet UIView* _liveView;
   /// Render frames in a layer.
@@ -111,6 +116,7 @@ static const int kSelectedEffectIdGlasses = 2;
   [newGraph addSidePackets:side_packets];
   [newGraph addFrameOutputStream:kOutputStream outputPacketType:MPPPacketTypePixelBuffer];
   [newGraph addFrameOutputStream:kMultiFaceGeometryStream outputPacketType:MPPPacketTypeRaw];
+  [newGraph addFrameOutputStream:kMultiFaceLandmark outputPacketType:MPPPacketTypeRaw];
   return newGraph;
 }
 
@@ -119,6 +125,7 @@ static const int kSelectedEffectIdGlasses = 2;
 - (void)viewDidLoad {
   [super viewDidLoad];
 
+  _captureInfo.hidden = NO;
   _effectSwitchingHintLabel.hidden = YES;
   _tapGestureRecognizer = [[UITapGestureRecognizer alloc] initWithTarget:self
                                                                   action:@selector(handleTap)];
@@ -244,6 +251,23 @@ static const int kSelectedEffectIdGlasses = 2;
 - (void)mediapipeGraph:(MPPGraph*)graph
      didOutputPacket:(const ::mediapipe::Packet&)packet
           fromStream:(const std::string&)streamName {
+    if (streamName == kMultiFaceLandmark) {
+        if (packet.IsEmpty()) {
+          NSLog(@"[TS:%lld] No face landmarks", packet.Timestamp().Value());
+          return;
+        }
+        const auto& multi_face_landmarks = packet.Get<std::vector<::mediapipe::NormalizedLandmarkList>>();
+        NSLog(@"[TS:%lld] Number of face instances with landmarks: %lu", packet.Timestamp().Value(),
+              multi_face_landmarks.size());
+        for (int face_index = 0; face_index < multi_face_landmarks.size(); ++face_index) {
+          const auto& landmarks = multi_face_landmarks[face_index];
+          NSLog(@"\tNumber of landmarks for face[%d]: %d", face_index, landmarks.landmark_size());
+          for (int i = 0; i < landmarks.landmark_size(); ++i) {
+            NSLog(@"\t\tLandmark[%d]: (%f, %f, %f)", i, landmarks.landmark(i).x(),
+                  landmarks.landmark(i).y(), landmarks.landmark(i).z());
+          }
+        }
+    }
   if (streamName == kMultiFaceGeometryStream) {
     if (packet.IsEmpty()) {
       NSLog(@"[TS:%lld] No face geometry", packet.Timestamp().Value());
@@ -258,6 +282,41 @@ static const int kSelectedEffectIdGlasses = 2;
       const auto& faceGeometry = multiFaceGeometry[faceIndex];
       NSLog(@"\tApprox. distance away from camera for face[%d]: %.6f cm", faceIndex,
             -faceGeometry.pose_transform_matrix().packed_data(kMatrixTranslationZIndex));
+        
+        float pitch = asin(faceGeometry.pose_transform_matrix().packed_data(6));
+        float yaw, roll;
+        if (cos(pitch) > 0.0001) {
+            yaw = atan2(faceGeometry.pose_transform_matrix().packed_data(2), faceGeometry.pose_transform_matrix().packed_data(10));
+            roll = atan2(faceGeometry.pose_transform_matrix().packed_data(4), faceGeometry.pose_transform_matrix().packed_data(5));
+        } else {
+            yaw = 0.0;
+            roll = atan2(-faceGeometry.pose_transform_matrix().packed_data(1), faceGeometry.pose_transform_matrix().packed_data(0));
+        }
+        
+        pitch = fmod(((pitch * 180.0 / M_PI) + 360.0), 360.0);
+        yaw = fmod(((yaw * 180.0 / M_PI) + 360.0), 360);
+        roll = fmod(((roll * 180.0 / M_PI) + 360.0), 360);
+        
+        //NSLog(@"pitch [%f], yaw [%f], roll [%f]", pitch, yaw, roll);
+        NSString* info = [NSString stringWithFormat:@"pitch [%f], \nyaw [%f], \nroll [%f]",
+                          pitch,
+                          yaw,
+                          roll];
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [_captureInfo setText:info];
+        });
+        
+//        euler.x = asinf(-mat._32);                  // Pitch
+//        if (cosf(euler.x) > 0.0001)                 // Not at poles
+//        {
+//            euler.y = atan2f(mat._31, mat._33);     // Yaw
+//            euler.z = atan2f(mat._12, mat._22);     // Roll
+//        }
+//        else
+//        {
+//            euler.y = 0.0f;                         // Yaw
+//            euler.z = atan2f(-mat._21, mat._11);    // Roll
+//        }
     }
   }
 }

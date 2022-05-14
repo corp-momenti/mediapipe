@@ -2,7 +2,7 @@
 # landmark pipeline on an input GPU image. The face landmarks are also
 # "smoothed" to achieve better visual results.
 
-type: "SingleFaceGeometryFromLandmarksGpu"
+type: "SingleFaceGeometryFromLandmarksCpu"
 
 # GPU image. (GpuBuffer)
 input_stream: "IMAGE:input_image"
@@ -23,14 +23,24 @@ output_stream: "MULTI_FACE_GEOMETRY:multi_face_geometry"
 
 output_stream: "multi_smoothed_face_landmarks"
 
+output_stream: "multi_face_landmarks"
+
+output_stream: "smoothed_face_landmarks"
+
+output_stream: "face_landmarks"
+
+output_stream: "output_video"
+
 # Creates a packet to inform the `FaceLandmarkFrontGpu` subgraph to detect at
 # most 1 face.
 node {
   calculator: "ConstantSidePacketCalculator"
-  output_side_packet: "PACKET:num_faces"
+  output_side_packet: "PACKET:0:num_faces"
+  output_side_packet: "PACKET:1:with_attention"
   node_options: {
     [type.googleapis.com/mediapipe.ConstantSidePacketCalculatorOptions]: {
       packet { int_value: 1 }
+      packet { bool_value: false }
     }
   }
 }
@@ -38,10 +48,14 @@ node {
 # Subgraph that detects faces and corresponding landmarks using the face
 # landmark pipeline.
 node {
-  calculator: "FaceLandmarkFrontGpu"
+  calculator: "FaceLandmarkFrontCpu"
   input_stream: "IMAGE:input_image"
   input_side_packet: "NUM_FACES:num_faces"
+  input_side_packet: "WITH_ATTENTION:with_attention"
   output_stream: "LANDMARKS:multi_face_landmarks"
+  output_stream: "ROIS_FROM_LANDMARKS:face_rects_from_landmarks"
+  output_stream: "DETECTIONS:face_detections"
+  output_stream: "ROIS_FROM_DETECTIONS:face_rects_from_detections"
 }
 
 # Extracts a single set of face landmarks associated with the most prominent
@@ -61,7 +75,7 @@ node {
 # Extracts the input image frame dimensions as a separate packet.
 node {
   calculator: "ImagePropertiesCalculator"
-  input_stream: "IMAGE_GPU:input_image"
+  input_stream: "IMAGE_CPU:input_image"
   output_stream: "SIZE:input_image_size"
 }
 
@@ -84,8 +98,18 @@ node {
 # Computes face geometry from face landmarks for a single face.
 node {
   calculator: "FaceGeometryFromLandmarks"
-  input_stream: "MULTI_FACE_LANDMARKS:multi_smoothed_face_landmarks"
+  input_stream: "MULTI_FACE_LANDMARKS:multi_face_landmarks"
   input_stream: "IMAGE_SIZE:input_image_size"
   input_side_packet: "ENVIRONMENT:environment"
   output_stream: "MULTI_FACE_GEOMETRY:multi_face_geometry"
+}
+
+# Subgraph that renders face-landmark annotation onto the input image.
+node {
+  calculator: "FaceRendererCpu"
+  input_stream: "IMAGE:input_image"
+  input_stream: "LANDMARKS:multi_smoothed_face_landmarks"
+  input_stream: "NORM_RECTS:face_rects_from_landmarks"
+  input_stream: "DETECTIONS:face_detections"
+  output_stream: "IMAGE:output_video"
 }

@@ -29,6 +29,8 @@ output_stream: "output_video"
 # (std::vector<face_geometry::FaceGeometry>)
 output_stream: "multi_face_geometry"
 
+output_stream: "multi_smoothed_face_landmarks"
+
 # Throttles the images flowing downstream for flow control. It passes through
 # the very first incoming image unaltered, and waits for downstream nodes
 # (calculators and subgraphs) in the graph to finish their tasks before it
@@ -76,13 +78,15 @@ node {
   input_side_packet: "ENABLE:use_face_detection_input_source"
   input_side_packet: "ENVIRONMENT:environment"
   output_stream: "MULTI_FACE_GEOMETRY:multi_face_geometry"
+  output_stream: "multi_smoothed_face_landmarks"
   node_options: {
     [type.googleapis.com/mediapipe.SwitchContainerOptions] {
       contained_node: {
         calculator: "SingleFaceGeometryFromLandmarksGpu"
       }
       contained_node: {
-        calculator: "SingleFaceGeometryFromDetectionGpu"
+        #calculator: "SingleFaceGeometryFromDetectionGpu"
+        calculator: "SingleFaceGeometryFromLandmarksGpu"
       }
     }
   }

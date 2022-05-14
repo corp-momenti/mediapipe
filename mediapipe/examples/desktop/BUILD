@@ -50,6 +50,8 @@ cc_library(
         "//mediapipe/framework/port:status",
         "@com_google_absl//absl/flags:flag",
         "@com_google_absl//absl/flags:parse",
+        "//mediapipe/framework/formats:landmark_cc_proto",
+        "//mediapipe/modules/face_geometry/protos:face_geometry_cc_proto"
     ],
 )
 
