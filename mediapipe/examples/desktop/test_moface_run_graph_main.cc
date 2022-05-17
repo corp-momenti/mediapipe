@@ -1,5 +1,11 @@
 
 #include <cstdlib>
+#include <fstream>
+#include <iostream>
+#include <map>
+#include <string>
+#include <vector>
+#include <filesystem>
 
 #include "absl/flags/flag.h"
 #include "absl/flags/parse.h"
@@ -25,8 +31,9 @@ constexpr char kOutputFaceLandmarkStream[] = "multi_face_landmarks";
 constexpr char kOutputFaceGeometryStream[] = "multi_face_geometry";
 constexpr char kWindowName[] = "MediaPipe";
 
-constexpr char kDetectedReferenceFramePath[] = "reference";
-constexpr char kDetectedFaceObservationPath[] = "face-observation";
+constexpr char kDetectedReferenceFramePath[] = "./mediapipe/examples/desktop/face_geometry/reference";
+constexpr char kDetectedFaceObservationPath[] = "./mediapipe/examples/desktop/face_geometry/face-observation";
+constexpr char kOuputVideoPath[] = "./mediapipe/examples/desktop/face_geometry/output-video";
 
 ABSL_FLAG(std::string, calculator_graph_config_file, "",
           "Name of file containing text format CalculatorGraphConfig proto.");
@@ -37,17 +44,83 @@ ABSL_FLAG(std::string, output_video_path, "",
           "Full path of where to save result (.mp4 only). "
           "If not provided, show result in a window.");
 
+void showDebugInfo(
+  std::string pitch, std::string yaw, std::string roll, std::string dist,
+  std::string state, std::string notifications,
+  cv::Point2f nose,
+  cv::Mat output_frame_mat
+) {
+    int text_left_align_pos = output_frame_mat.cols / 2;
+    cv::putText(
+      output_frame_mat,
+      pitch,
+      cv::Point(text_left_align_pos, 20), //cv::Point(10, output_frame_mat.rows / 2), //top-left position
+      cv::FONT_HERSHEY_DUPLEX,
+      0.5,
+      CV_RGB(255, 0, 0),
+      2
+    );
+    cv::putText(
+      output_frame_mat,
+      yaw,
+      cv::Point(text_left_align_pos, 40),
+      cv::FONT_HERSHEY_DUPLEX,
+      0.5,
+      CV_RGB(0, 255, 0),
+      2
+    );
+    cv::putText(
+      output_frame_mat,
+      roll,
+      cv::Point(text_left_align_pos, 60),
+      cv::FONT_HERSHEY_DUPLEX,
+      0.5,
+      CV_RGB(0, 0, 255),
+      2
+    );
+    cv::putText(
+      output_frame_mat,
+      dist,
+      cv::Point(text_left_align_pos, 80),
+      cv::FONT_HERSHEY_DUPLEX,
+      0.5,
+      CV_RGB(255, 0, 0),
+      2
+    );
+    cv::putText(
+      output_frame_mat,
+      notifications,
+      cv::Point(text_left_align_pos, 100),
+      cv::FONT_HERSHEY_DUPLEX,
+      0.5,
+      CV_RGB(255, 0, 0),
+      2
+    );
+    cv::putText(
+      output_frame_mat,
+      state,
+      cv::Point(text_left_align_pos, 120),
+      cv::FONT_HERSHEY_DUPLEX,
+      0.5,
+      CV_RGB(255, 0, 0),
+      2
+    );
+}
+
 absl::Status RunMPPGraph() {
-  std::string prev_state, cur_state;
+  std::string prev_state = "init", cur_state = "init";
   std::vector<moface::FaceObservationSnapShot> face_observation_snapshot_array;
   std::vector<::mediapipe::NormalizedLandmarkList> reference_landmark;
   rapidjson::Document face_observation_object;
 
   //Objects for displaying
   cv::Point2f nose_point;
-  std::string pitch_text, roll_text, yaw_text, state_text, notification_text;
+  std::string pitch_text, roll_text, yaw_text, distance_text, state_text = "init", notification_text = "";
 
   std::string calculator_graph_config_contents;
+
+  //std::filesystem::create_directories("./reference");
+
   MP_RETURN_IF_ERROR(mediapipe::file::GetContents(
       absl::GetFlag(FLAGS_calculator_graph_config_file),
       &calculator_graph_config_contents));
@@ -143,14 +216,14 @@ absl::Status RunMPPGraph() {
       // absl::StrAppend(&output_data, landmark_packet.Timestamp().Value(), ",");
     }
     const auto& multi_face_landmarks = landmark_packet.Get<std::vector<::mediapipe::NormalizedLandmarkList>>();
-    LOG(INFO) << "[" << landmark_packet.Timestamp().Value() << "] Number of face instances with landmark : " << multi_face_landmarks.size();
-    for (int face_index = 0; face_index < multi_face_landmarks.size(); ++face_index) {
-      const auto& landmarks = multi_face_landmarks[face_index];
-      LOG(INFO) << "Number of landmarks for face[" << face_index << "] size : " << landmarks.landmark_size();
-      for (int i = 0; i < landmarks.landmark_size(); ++i) {
-        LOG(INFO) << "\tLandmark[" << i << "] (" << landmarks.landmark(i).x() << ", " << landmarks.landmark(i).y() << ", " << landmarks.landmark(i).z() << ")";
-      }
-    }
+    // LOG(INFO) << "[" << landmark_packet.Timestamp().Value() << "] Number of face instances with landmark : " << multi_face_landmarks.size();
+    // for (int face_index = 0; face_index < multi_face_landmarks.size(); ++face_index) {
+    //   const auto& landmarks = multi_face_landmarks[face_index];
+    //   LOG(INFO) << "Number of landmarks for face[" << face_index << "] size : " << landmarks.landmark_size();
+    //   for (int i = 0; i < landmarks.landmark_size(); ++i) {
+    //     LOG(INFO) << "\tLandmark[" << i << "] (" << landmarks.landmark(i).x() << ", " << landmarks.landmark(i).y() << ", " << landmarks.landmark(i).z() << ")";
+    //   }
+    // }
 
     //Get the graph result packet for geometry sstream
     mediapipe::Packet geometry_packet;
@@ -158,15 +231,11 @@ absl::Status RunMPPGraph() {
         LOG(INFO) << "No geometry packet";
     }
     const auto& multi_face_geometry = geometry_packet.Get<std::vector<::mediapipe::face_geometry::FaceGeometry>>();
-    LOG(INFO) << "[" << geometry_packet.Timestamp().Value() << "] Number of face instances with face geometry : " << multi_face_geometry.size();
+    float pitch, yaw, roll, distance;
+    //LOG(INFO) << "[" << geometry_packet.Timestamp().Value() << "] Number of face instances with face geometry : " << multi_face_geometry.size();
     for (int faceIndex = 0; faceIndex < multi_face_geometry.size(); ++faceIndex) {
       const auto& faceGeometry = multi_face_geometry[faceIndex];
-      printf("\tApprox. distance away from camera for face[%d]: %.6f cm]\n", faceIndex,
-            -faceGeometry.pose_transform_matrix().packed_data(14));
-
-
-      float pitch = asin(faceGeometry.pose_transform_matrix().packed_data(6));
-      float yaw, roll;
+      pitch = asin(faceGeometry.pose_transform_matrix().packed_data(6));
       if (cos(pitch) > 0.0001) {
           yaw = atan2(faceGeometry.pose_transform_matrix().packed_data(2), faceGeometry.pose_transform_matrix().packed_data(10));
           roll = atan2(faceGeometry.pose_transform_matrix().packed_data(4), faceGeometry.pose_transform_matrix().packed_data(5));
@@ -174,16 +243,23 @@ absl::Status RunMPPGraph() {
           yaw = 0.0;
           roll = atan2(-faceGeometry.pose_transform_matrix().packed_data(1), faceGeometry.pose_transform_matrix().packed_data(0));
       }
-
       pitch = fmod(((pitch * 180.0 / M_PI) + 360.0), 360.0);
       yaw = fmod(((yaw * 180.0 / M_PI) + 360.0), 360);
       roll = fmod(((roll * 180.0 / M_PI) + 360.0), 360);
-
-      LOG(INFO) << "pitch : " << pitch << ", yaw : " << yaw << ", roll : " << roll << ", distance : " << -faceGeometry.pose_transform_matrix().packed_data(14);
+      distance = -faceGeometry.pose_transform_matrix().packed_data(14);
+      //LOG(INFO) << "pitch : " << pitch << ", yaw : " << yaw << ", roll : " << roll << ", distance : " << distance;
+      pitch_text = std::to_string(pitch);
+      yaw_text = std::to_string(yaw);
+      roll_text = std::to_string(roll);
+      distance_text = std::to_string(distance);
     }
 
+    //beginning of each state
+
+    //end of each state
+
     //Convert back to opencv for display or saving.
-    cv::Mat output_frame_mat = mediapipe::formats::MatView(&output_frame);
+    cv::Mat output_frame_mat = camera_frame;//mediapipe::formats::MatView(&output_frame);
     cv::cvtColor(output_frame_mat, output_frame_mat, cv::COLOR_RGB2BGR);
     if (save_video) {
       if (!writer.isOpened()) {
@@ -194,14 +270,18 @@ absl::Status RunMPPGraph() {
         RET_CHECK(writer.isOpened());
       }
       writer.write(output_frame_mat);
-    } else {
-      cv::imshow(kWindowName, output_frame_mat);
-      // Press any key to exit.
-      const int pressed_key = cv::waitKey(5);
-      if (pressed_key >= 0 && pressed_key != 255) grab_frames = false;
     }
+
+    //show all the texts
+    showDebugInfo(pitch_text, yaw_text, roll_text, distance_text, state_text, notification_text, nose_point, output_frame_mat);
+    cv::imshow(kWindowName, output_frame_mat);
+    // Press any key to exit.
+    const int pressed_key = cv::waitKey(5);
+    if (pressed_key >= 0 && pressed_key != 255) grab_frames = false;
+
   }
 
+  //(todo) write the face_observation to uuid.json
   LOG(INFO) << "Shutting down.";
   if (writer.isOpened()) writer.release();
   MP_RETURN_IF_ERROR(graph.CloseInputStream(kInputStream));
