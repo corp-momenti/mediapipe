@@ -55,6 +55,52 @@ cc_library(
     ],
 )
 
+cc_library(
+    name = "test_moface_run_graph_main",
+    srcs = ["test_moface_run_graph_main.cc"],
+    hdrs =[
+        "rapidjson/document.h",
+        "rapidjson/reader.h",
+        "rapidjson/allocators.h",
+        "rapidjson/rapidjson.h",
+        "rapidjson/stream.h",
+        "rapidjson/encodings.h",
+        "rapidjson/encodedstream.h",
+        "rapidjson/memorystream.h",
+        "rapidjson/writer.h",
+        "rapidjson/stringbuffer.h",
+        "rapidjson/internal/swap.h",
+        "rapidjson/internal/meta.h",
+        "rapidjson/internal/clzll.h",
+        "rapidjson/internal/stack.h",
+        "rapidjson/internal/strtod.h",
+        "rapidjson/internal/ieee754.h",
+        "rapidjson/internal/biginteger.h",
+        "rapidjson/internal/diyfp.h",
+        "rapidjson/internal/pow10.h",
+        "rapidjson/internal/strfunc.h",
+        "rapidjson/internal/dtoa.h",
+        "rapidjson/internal/itoa.h",
+        "rapidjson/error/error.h",
+    ],
+    includes = ["rapidjson"],
+    deps = [
+        "//mediapipe/framework:calculator_framework",
+        "//mediapipe/framework/formats:image_frame",
+        "//mediapipe/framework/formats:image_frame_opencv",
+        "//mediapipe/framework/port:file_helpers",
+        "//mediapipe/framework/port:opencv_highgui",
+        "//mediapipe/framework/port:opencv_imgproc",
+        "//mediapipe/framework/port:opencv_video",
+        "//mediapipe/framework/port:parse_text_proto",
+        "//mediapipe/framework/port:status",
+        "@com_google_absl//absl/flags:flag",
+        "@com_google_absl//absl/flags:parse",
+        "//mediapipe/framework/formats:landmark_cc_proto",
+        "//mediapipe/modules/face_geometry/protos:face_geometry_cc_proto"
+    ],
+)
+
 # Linux only.
 # Must have a GPU with EGL support:
 # ex: sudo apt-get install mesa-common-dev libegl1-mesa-dev libgles2-mesa-dev
