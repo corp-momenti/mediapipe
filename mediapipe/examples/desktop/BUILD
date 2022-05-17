@@ -82,7 +82,9 @@ cc_library(
         "rapidjson/internal/dtoa.h",
         "rapidjson/internal/itoa.h",
         "rapidjson/error/error.h",
-        "include/face_observation_snapshot.h"
+        "include/face_observation_snapshot.h",
+        "include/moface_state.h",
+        "include/custum_uuid.h"
     ],
     includes = ["rapidjson"],
     deps = [

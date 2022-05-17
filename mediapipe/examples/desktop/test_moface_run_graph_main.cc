@@ -6,6 +6,8 @@
 #include <string>
 #include <vector>
 #include <filesystem>
+#include <algorithm>
+#include <iterator>
 
 #include "absl/flags/flag.h"
 #include "absl/flags/parse.h"
@@ -24,6 +26,8 @@
 #include "rapidjson/writer.h"
 #include "rapidjson/stringbuffer.h"
 #include "include/face_observation_snapshot.h"
+#include "include/moface_state.h"
+#include "include/custum_uuid.h"
 
 constexpr char kInputStream[] = "input_video";
 constexpr char kOutputStream[] = "output_video";
@@ -107,19 +111,30 @@ void showDebugInfo(
     );
 }
 
+bool isReferenceFrame(
+  double pitch,
+  double yaw,
+  double roll
+) {
+
+  return true;
+}
+
 absl::Status RunMPPGraph() {
-  std::string prev_state = "init", cur_state = "init";
+  moface::MoFaceState prev_state = moface::eInit, cur_state = moface::eInit;
   std::vector<moface::FaceObservationSnapShot> face_observation_snapshot_array;
   std::vector<::mediapipe::NormalizedLandmarkList> reference_landmark;
   rapidjson::Document face_observation_object;
 
   //Objects for displaying
   cv::Point2f nose_point;
-  std::string pitch_text, roll_text, yaw_text, distance_text, state_text = "init", notification_text = "";
+  std::string pitch_text, roll_text, yaw_text, distance_text, state_text = moface::to_string(moface::eInit), notification_text = "";
 
   std::string calculator_graph_config_contents;
 
-  //std::filesystem::create_directories("./reference");
+  std::filesystem::create_directories(kDetectedReferenceFramePath);
+  std::filesystem::create_directories(kDetectedFaceObservationPath);
+  std::filesystem::create_directories(kOuputVideoPath);
 
   MP_RETURN_IF_ERROR(mediapipe::file::GetContents(
       absl::GetFlag(FLAGS_calculator_graph_config_file),
@@ -255,7 +270,35 @@ absl::Status RunMPPGraph() {
     }
 
     //beginning of each state
-
+    switch (cur_state) {
+      case moface::eInit:
+        state_text = moface::to_string(cur_state);
+        prev_state = cur_state;
+        cur_state = moface::eStart;
+        break;
+      case moface::eStart:
+        state_text = moface::to_string(cur_state);
+        if (isReferenceFrame(pitch, yaw, roll)) {
+          notification_text = "Captured Reference Frame!!!";
+          std::string tmp_file_name = std::string(kDetectedReferenceFramePath) + "/" + moface::generate_uuid_v4() + ".png";
+          cv::imwrite(tmp_file_name, camera_frame);
+          copy(multi_face_landmarks.begin(), multi_face_landmarks.end(), back_inserter(reference_landmark));
+          prev_state = cur_state;
+          cur_state = moface::eReady;
+        }
+        break;
+      case moface::eReady:
+        break;
+      case moface::eDragTracking:
+        break;
+      case moface::eDragAnalyzing:
+        break;
+      case moface::eNop:
+        break;
+      default:
+        LOG(INFO) << "not available state!!!!";
+        break;
+    }
     //end of each state
 
     //Convert back to opencv for display or saving.
