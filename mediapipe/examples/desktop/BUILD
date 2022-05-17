@@ -82,6 +82,7 @@ cc_library(
         "rapidjson/internal/dtoa.h",
         "rapidjson/internal/itoa.h",
         "rapidjson/error/error.h",
+        "include/face_observation_snapshot.h"
     ],
     includes = ["rapidjson"],
     deps = [
