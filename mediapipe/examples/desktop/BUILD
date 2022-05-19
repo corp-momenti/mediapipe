@@ -68,6 +68,7 @@ cc_library(
         "rapidjson/encodedstream.h",
         "rapidjson/memorystream.h",
         "rapidjson/writer.h",
+        "rapidjson/prettywriter.h",
         "rapidjson/stringbuffer.h",
         "rapidjson/internal/swap.h",
         "rapidjson/internal/meta.h",

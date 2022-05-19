@@ -120,11 +120,54 @@ bool isReferenceFrame(
   return true;
 }
 
+bool isWithinReferenceRange(
+  double pitch,
+  double yaw,
+  double roll
+) {
+
+  return false;
+}
+
+bool hitDragLimit(
+  double pitch,
+  double yaw,
+  double roll
+) {
+  return false;
+}
+
+bool dragGoingBackward(
+  std::vector<moface::FaceObservationSnapShot> const& snapshot_array
+) {
+  return false;
+}
+
+bool dragTooSlow(
+  std::vector<moface::FaceObservationSnapShot> const& snapshot_array
+) {
+  return false;
+}
+
+bool hasValidDrag(
+  std::vector<moface::FaceObservationSnapShot> const& snapshot_array
+) {
+  return false;
+}
+
+void addDragToFaceObservation(
+  std::vector<moface::FaceObservationSnapShot> const& snapshot_array,
+  moface::FaceObservation *face_observation
+) {
+
+  return;
+}
+
 absl::Status RunMPPGraph() {
   moface::MoFaceState prev_state = moface::eInit, cur_state = moface::eInit;
   std::vector<moface::FaceObservationSnapShot> face_observation_snapshot_array;
   std::vector<::mediapipe::NormalizedLandmarkList> reference_landmark;
-  rapidjson::Document face_observation_object;
+  moface::FaceObservation *face_observation_object = new moface::FaceObservation("");
 
   //Objects for displaying
   cv::Point2f nose_point;
@@ -271,13 +314,12 @@ absl::Status RunMPPGraph() {
 
     //beginning of each state
     switch (cur_state) {
+      state_text = moface::to_string(cur_state);
       case moface::eInit:
-        state_text = moface::to_string(cur_state);
         prev_state = cur_state;
         cur_state = moface::eStart;
         break;
       case moface::eStart:
-        state_text = moface::to_string(cur_state);
         if (isReferenceFrame(pitch, yaw, roll)) {
           notification_text = "Captured Reference Frame!!!";
           std::string tmp_file_name = std::string(kDetectedReferenceFramePath) + "/" + moface::generate_uuid_v4() + ".png";
@@ -288,10 +330,63 @@ absl::Status RunMPPGraph() {
         }
         break;
       case moface::eReady:
+        if (!isWithinReferenceRange(pitch, yaw, roll)) {
+          moface::FaceObservationSnapShot new_snapshot = {
+            .timestamp = geometry_packet.Timestamp().Value(),
+            .pitch = pitch,
+            .roll = roll,
+            .yaw = yaw
+          };
+          copy(multi_face_landmarks.begin(), multi_face_landmarks.end(), back_inserter(new_snapshot.landmarks));
+          face_observation_snapshot_array.push_back(new_snapshot);
+          prev_state = cur_state;
+          cur_state = moface::eDragTracking;
+        } else {
+          //add face_observation_shapshot_array
+          //if there's 5 seconds long snapshsots and check if it has an eye action
+          //  add eye action
+          //  notify we have an eye action
+          //if there's 5 seconds long snapshots and check if it has a mouth action
+          //  add mouth action
+          //  notify we have an mouth action
+          //if the lenth of snapshot array is longer than 5 sec, clear face_observation_snapshot_array
+        }
         break;
       case moface::eDragTracking:
+        if (isWithinReferenceRange(pitch, yaw, roll)) {
+          prev_state = cur_state;
+          cur_state = moface::eReady;
+          face_observation_snapshot_array.clear();
+        } else if (hitDragLimit(pitch, yaw, roll)) {
+          prev_state = cur_state;
+          cur_state = moface::eDragAnalyzing;
+        } else {
+          moface::FaceObservationSnapShot new_snapshot = {
+            .timestamp = geometry_packet.Timestamp().Value(),
+            .pitch = pitch,
+            .roll = roll,
+            .yaw = yaw
+          };
+          copy(multi_face_landmarks.begin(), multi_face_landmarks.end(), back_inserter(new_snapshot.landmarks));
+          face_observation_snapshot_array.push_back(new_snapshot);
+          if (dragGoingBackward(face_observation_snapshot_array)) {
+            notification_text = "drag is going backward!!!";
+          }
+          if (dragTooSlow(face_observation_snapshot_array)) {
+            notification_text = "drag need to move fater!!!";
+          }
+        }
         break;
       case moface::eDragAnalyzing:
+        if (hasValidDrag(face_observation_snapshot_array)) {
+          addDragToFaceObservation(face_observation_snapshot_array, face_observation_object);
+          notification_text = "drag action captured!!!";
+        } else {
+          notification_text = "no valid drag!!!";
+        }
+        face_observation_snapshot_array.clear();
+        prev_state = cur_state;
+        cur_state = moface::eNop;
         break;
       case moface::eNop:
         break;
@@ -323,8 +418,14 @@ absl::Status RunMPPGraph() {
     if (pressed_key >= 0 && pressed_key != 255) grab_frames = false;
 
   }
-
-  //(todo) write the face_observation to uuid.json
+  face_observation_object->update_media_file_path(std::string(kOuputVideoPath) + "/" + moface::generate_uuid_v4() + ".mp4");
+  rapidjson::StringBuffer sb;
+  rapidjson::PrettyWriter<rapidjson::StringBuffer> json_writer(sb);
+  face_observation_object->Serialize(json_writer);
+  std::filesystem::path path {std::string(kDetectedFaceObservationPath) + "/" + moface::generate_uuid_v4() + ".json"};
+  std::ofstream ofs(path);
+  ofs << sb.GetString();
+  ofs.close();
   LOG(INFO) << "Shutting down.";
   if (writer.isOpened()) writer.release();
   MP_RETURN_IF_ERROR(graph.CloseInputStream(kInputStream));
