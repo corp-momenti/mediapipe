@@ -12,6 +12,7 @@ namespace moface {
 
     struct FaceObservationSnapShot {
         int64 timestamp;
+        int frame_id;
         float pitch;
         float roll;
         float yaw;
@@ -29,7 +30,7 @@ namespace moface {
             }
             ~ObservationTrackedPosition() {}
             template <typename Writer>
-            void Serialize(Writer& writer) const {
+            void serialize(Writer& writer) const {
                 writer.StartObject();
                 writer.String("x");
                 writer.Double(_x);
@@ -52,12 +53,11 @@ namespace moface {
                 return *this;
             }
             ~ObservationFeed() {}
-
-            void AddTrackedPosition(const ObservationTrackedPosition& tracked_position) {
+            void addTrackedPosition(const ObservationTrackedPosition& tracked_position) {
                 _tracked_positions.push_back(tracked_position);
             }
             template <typename Writer>
-            void Serialize(Writer& writer) const {
+            void serialize(Writer& writer) const {
                 writer.StartObject();
                 writer.String("timestamp");
                 writer.Int64(_timestamp);
@@ -67,7 +67,7 @@ namespace moface {
                     pos_itr != _tracked_positions.end();
                     ++pos_itr
                 )
-                    pos_itr->Serialize(writer);
+                    pos_itr->serialize(writer);
                 writer.EndArray();
                 writer.EndObject();
             }
@@ -81,7 +81,7 @@ namespace moface {
             ObservationRoi(double x, double y, double width, double height) : _x(x), _y(y), _width(width), _height(height) {}
             ~ObservationRoi() {}
             template <typename Writer>
-            void Serialize(Writer& writer) const {
+            void serialize(Writer& writer) const {
                 writer.StartObject();
                 writer.String("x");
                 writer.Double(_x);
@@ -108,9 +108,12 @@ namespace moface {
                 _feeds = rhs._feeds;
                 return *this;
             }
+            void addFeed(const ObservationFeed& feed) {
+                _feeds.push_back(feed);
+            }
             ~ObservationAction() { delete _roi; }
             template <typename Writer>
-            void Serialize(Writer& writer) const {
+            void serialize(Writer& writer) const {
                 writer.StartObject();
                 writer.String("type");
                 #if RAPIDJSON_HAS_STDSTRING
@@ -118,14 +121,14 @@ namespace moface {
                 #else
                 writer.String(_type.c_str(), static_cast<SizeType>(_type.length()));
                 #endif
-                _roi->Serialize(writer);
+                _roi->serialize(writer);
                 writer.StartArray();
                 for (
                     std::vector<ObservationFeed>::const_iterator feed_itr = _feeds.begin();
                     feed_itr != _feeds.end();
                     ++feed_itr
                 )
-                    feed_itr->Serialize(writer);
+                    feed_itr->serialize(writer);
                 writer.EndArray();
                 writer.EndObject();
             }
@@ -144,8 +147,11 @@ namespace moface {
                 return *this;
             }
             ~ObservationObject() {}
+            void addAction(const ObservationAction& action) {
+                _actions.push_back(action);
+            }
             template <typename Writer>
-            void Serialize(Writer& writer) const {
+            void serialize(Writer& writer) const {
                 writer.StartObject();
                 writer.String("name");
                 #if RAPIDJSON_HAS_STDSTRING
@@ -159,7 +165,7 @@ namespace moface {
                     action_itr != _actions.end();
                     ++action_itr
                 )
-                    action_itr->Serialize(writer);
+                    action_itr->serialize(writer);
                 writer.EndArray();
                 writer.EndObject();
             }
@@ -178,13 +184,21 @@ namespace moface {
                 _objects = rhs._objects;
                 return *this;
             }
-
-            void update_media_file_path(const std::string& file_path) {
+            void updateMediaFilePath(const std::string& file_path) {
                 _file_path = file_path;
                 return;
             }
+            void addObject(const ObservationObject& object) {
+                _objects.push_back(object);
+            }
+            int objectCount() {
+                return _objects.size();
+            }
+            ObservationObject& lastObject() {
+                return _objects.back();
+            }
             template <typename Writer>
-            void Serialize(Writer& writer) const {
+            void serialize(Writer& writer) const {
                 writer.StartObject();
                 writer.String("file_path");
                 #if RAPIDJSON_HAS_STDSTRING
@@ -199,7 +213,7 @@ namespace moface {
                     objectItr != _objects.end();
                     ++objectItr
                 )
-                    objectItr->Serialize(writer);
+                    objectItr->serialize(writer);
                 writer.EndArray();
                 writer.EndObject();
             }

@@ -1,0 +1,40 @@
+{
+	"objects": [
+		{
+			"object_name": "face",
+			"actions": [
+				{
+					"type": "drag",
+					"roi": {
+						"x": 0.0,
+						"y": 0.0,
+						"width": 1080.0,
+						"height": 1920.0
+					},
+					"feeds": [
+						{
+							"time_stamp" : 0.0,
+							"tracked_positions": [
+								{
+									"x": 0.0,
+									"y": 0.0,
+									"z": 0.0
+								}
+							]
+						},
+						{
+							"time_stamp" : 3000.0,
+							"tracked_positions": [
+								{
+									"x": 1.0,
+									"y": 3.0,
+									"z": 10.0
+								}
+							]
+						}
+					]
+                }
+            ]
+        }
+    ]
+}

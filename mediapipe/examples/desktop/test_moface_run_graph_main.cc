@@ -29,6 +29,32 @@
 #include "include/moface_state.h"
 #include "include/custum_uuid.h"
 
+//Decision Configuration
+//Reference Frame Range
+constexpr double kReferencePitchMin = 357.0;
+constexpr double kReferencePitchMax = 3.0;
+constexpr double kReferenceYawMin = 357.0;
+constexpr double kReferenceYawMax = 3.0;
+constexpr double kReferenceRollMin = 357.0;
+constexpr double kReferenceRollMax = 3.0;
+
+//Reference Range Range
+constexpr double kReferenceRangePitchMin = 355.0;
+constexpr double kReferenceRangePitchMax = 5.0;
+constexpr double kReferenceRangeYawMin = 355.0;
+constexpr double kReferenceRangeYawMax = 5.0;
+constexpr double kReferenceRangeRollMin = 355.0;
+constexpr double kReferenceRangeRollMax = 5.0;
+
+//Drag Action Limit
+constexpr double kDragLimit = 30.0;
+
+//Drag Backward Limit
+constexpr double kDragBackwardLimit = 5.0;
+
+//Drag Slow Limit
+constexpr double kDragSlowLimit = 10.0; // degree per sec
+
 constexpr char kInputStream[] = "input_video";
 constexpr char kOutputStream[] = "output_video";
 constexpr char kOutputFaceLandmarkStream[] = "multi_face_landmarks";
@@ -116,8 +142,29 @@ bool isReferenceFrame(
   double yaw,
   double roll
 ) {
+  bool pitch_in_range = false, yaw_in_range = false, roll_in_range = false;
+  if ( (pitch >= kReferencePitchMin && pitch <= 360.0) ||
+       (pitch >= 0.0 && pitch <= kReferencePitchMax)
+  ) {
+    pitch_in_range = true;
+    LOG(INFO) << "Reference Frame Pitch Angle : " << pitch;
+  }
 
-  return true;
+  if ( (yaw >= kReferenceYawMin && yaw <= 360.0) ||
+       (yaw >= 0.0 && yaw <= kReferenceYawMax)
+  ) {
+    yaw_in_range = true;
+    LOG(INFO) << "Reference Frame Yaw Angle : " << yaw;
+  }
+
+  if ( (roll >= kReferenceRollMin && roll <= 360.0) ||
+       (roll >= 0.0 && roll <= kReferenceRollMax)
+  ) {
+    roll_in_range = true;
+    LOG(INFO) << "Reference Frame Roll Angle : " << roll;
+  }
+
+  return pitch_in_range && yaw_in_range && roll_in_range;
 }
 
 bool isWithinReferenceRange(
@@ -125,7 +172,16 @@ bool isWithinReferenceRange(
   double yaw,
   double roll
 ) {
-
+  if ( ((pitch >= kReferenceRangePitchMin && pitch <= 360.0) ||
+       (pitch >= 0.0 && pitch <= kReferenceRangePitchMax)) &&
+       ((yaw >= kReferenceRangeYawMin && yaw <= 360.0) ||
+       (yaw >= 0.0 && yaw <= kReferenceRangeYawMax)) &&
+       ((roll >= kReferenceRangeRollMin && roll <= 360.0) ||
+       (roll >= 0.0 && roll <= kReferenceRangeRollMax)) )
+  {
+    LOG(INFO) << "Within Reference Range Angle : (" << pitch << ", " << yaw << ", " << roll << ")";
+    true;
+  }
   return false;
 }
 
@@ -134,32 +190,102 @@ bool hitDragLimit(
   double yaw,
   double roll
 ) {
+  if (pitch >= kDragLimit) {
+    LOG(INFO) << "angle hit : " << pitch;
+    return true;
+  }
   return false;
+}
+
+bool dragGoingBackward(
+  std::vector<moface::FaceObservationSnapShot> const& snapshot_array,
+  size_t from,
+  size_t to
+) {
+  bool ret = false;
+  moface::FaceObservationSnapShot last_item = snapshot_array[from];
+  moface::FaceObservationSnapShot cmp_item = snapshot_array[to];
+  if (kDragBackwardLimit >= abs(last_item.pitch - cmp_item.pitch)) {
+    ret = true;
+  }
+  if (kDragBackwardLimit >= abs(last_item.yaw - cmp_item.yaw)) {
+    ret = true;
+  }
+  if (kDragBackwardLimit >= abs(last_item.roll - cmp_item.roll)) {
+    ret = true;
+  }
+  return ret;
 }
 
 bool dragGoingBackward(
   std::vector<moface::FaceObservationSnapShot> const& snapshot_array
 ) {
+  size_t length = snapshot_array.size();
+  return dragGoingBackward(snapshot_array, length - 1, length - 2);
+}
+
+bool dragTooSlow(
+  std::vector<moface::FaceObservationSnapShot> const& snapshot_array,
+  int from,
+  int to
+) {
+  moface::FaceObservationSnapShot last_item = snapshot_array[from];
+  moface::FaceObservationSnapShot cmp_item = snapshot_array[to];
+  double time_elapsed = abs(from - to) / 30.0;
+  double angle_distance = sqrt(
+    pow(last_item.pitch - cmp_item.pitch,2) +
+    pow(last_item.yaw- cmp_item.yaw,2) +
+    pow(last_item.roll - cmp_item.roll,2)
+  );
+  if (kDragSlowLimit >= (angle_distance / time_elapsed)) {
+    LOG(INFO) << "Drag Too Slow : Angle Velocity : " <<  (angle_distance / time_elapsed);
+    return true;
+  }
   return false;
 }
 
 bool dragTooSlow(
   std::vector<moface::FaceObservationSnapShot> const& snapshot_array
 ) {
-  return false;
+  size_t length = snapshot_array.size();
+  return dragTooSlow(snapshot_array, length - 1, length - 2);
 }
 
 bool hasValidDrag(
   std::vector<moface::FaceObservationSnapShot> const& snapshot_array
 ) {
-  return false;
+  //check if it's left drag
+  //check if it's right drag
+  //check if it's up drag
+  //check if it's down drag
+  bool ret = true;
+  for(std::vector<moface::FaceObservationSnapShot>::size_type i = 0; i != snapshot_array.size(); i++) {
+    if (dragGoingBackward(snapshot_array, i, i + 1)) {
+      ret = false;
+    }
+    if (dragTooSlow(snapshot_array, i, i + 1)) {
+      ret = false;
+    }
+  }
+  return ret;
 }
 
 void addDragToFaceObservation(
   std::vector<moface::FaceObservationSnapShot> const& snapshot_array,
   moface::FaceObservation *face_observation
 ) {
-
+  if (!face_observation->objectCount()) {
+    moface::ObservationObject *new_object = new moface::ObservationObject("face");
+    face_observation->addObject(*new_object);
+  }
+  moface::ObservationAction *new_action = new moface::ObservationAction("drag", 0.0, 0.0, 1080.0, 1920.0);
+  for (auto snapshot : snapshot_array) {
+    moface::ObservationFeed *new_feed = new moface::ObservationFeed(snapshot.frame_id / 30.0);
+    moface::ObservationTrackedPosition *new_track = new moface::ObservationTrackedPosition(0.0, 0.0, 0.0);
+    new_feed->addTrackedPosition(*new_track);
+    new_action->addFeed(*new_feed);
+  }
+  (face_observation->lastObject()).addAction(*new_action);
   return;
 }
 
@@ -168,6 +294,7 @@ absl::Status RunMPPGraph() {
   std::vector<moface::FaceObservationSnapShot> face_observation_snapshot_array;
   std::vector<::mediapipe::NormalizedLandmarkList> reference_landmark;
   moface::FaceObservation *face_observation_object = new moface::FaceObservation("");
+  int frame_id = 0;
 
   //Objects for displaying
   cv::Point2f nose_point;
@@ -333,6 +460,7 @@ absl::Status RunMPPGraph() {
         if (!isWithinReferenceRange(pitch, yaw, roll)) {
           moface::FaceObservationSnapShot new_snapshot = {
             .timestamp = geometry_packet.Timestamp().Value(),
+            .frame_id = frame_id,
             .pitch = pitch,
             .roll = roll,
             .yaw = yaw
@@ -363,6 +491,7 @@ absl::Status RunMPPGraph() {
         } else {
           moface::FaceObservationSnapShot new_snapshot = {
             .timestamp = geometry_packet.Timestamp().Value(),
+            .frame_id = frame_id,
             .pitch = pitch,
             .roll = roll,
             .yaw = yaw
@@ -410,6 +539,8 @@ absl::Status RunMPPGraph() {
       writer.write(output_frame_mat);
     }
 
+    frame_id ++;
+
     //show all the texts
     showDebugInfo(pitch_text, yaw_text, roll_text, distance_text, state_text, notification_text, nose_point, output_frame_mat);
     cv::imshow(kWindowName, output_frame_mat);
@@ -418,10 +549,10 @@ absl::Status RunMPPGraph() {
     if (pressed_key >= 0 && pressed_key != 255) grab_frames = false;
 
   }
-  face_observation_object->update_media_file_path(std::string(kOuputVideoPath) + "/" + moface::generate_uuid_v4() + ".mp4");
+  face_observation_object->updateMediaFilePath(std::string(kOuputVideoPath) + "/" + moface::generate_uuid_v4() + ".mp4");
   rapidjson::StringBuffer sb;
   rapidjson::PrettyWriter<rapidjson::StringBuffer> json_writer(sb);
-  face_observation_object->Serialize(json_writer);
+  face_observation_object->serialize(json_writer);
   std::filesystem::path path {std::string(kDetectedFaceObservationPath) + "/" + moface::generate_uuid_v4() + ".json"};
   std::ofstream ofs(path);
   ofs << sb.GetString();
