@@ -13,7 +13,7 @@ namespace moface {
         eNop
     };
 
-    std::string to_string(MoFaceState const& in_code) {
+    std::string state_to_string(MoFaceState const& in_code) {
         std::string ret_string;
         switch (in_code) {
             case eInit:

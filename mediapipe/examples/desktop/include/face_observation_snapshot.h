@@ -11,12 +11,37 @@ using namespace rapidjson;
 namespace moface {
 
     struct FaceObservationSnapShot {
-        int64 timestamp;
+        double timestamp;
         int frame_id;
         float pitch;
         float roll;
         float yaw;
         std::vector<::mediapipe::NormalizedLandmarkList> landmarks;
+    };
+
+    class ObservationRotation {
+        public:
+            ObservationRotation(float pitch, float yaw, float roll) : _pitch(pitch), _yaw(yaw), _roll(roll) {}
+            ObservationRotation& operator=(const ObservationRotation& rhs) {
+                _pitch = rhs._pitch;
+                _yaw = rhs._yaw;
+                _roll = rhs._roll;
+                return *this;
+            }
+            ~ObservationRotation() {}
+            template <typename Writer>
+            void serialize(Writer& writer) const {
+                writer.StartObject();
+                writer.String("pitch");
+                writer.Double(_pitch);
+                writer.String("yaw");
+                writer.Double(_yaw);
+                writer.String("roll");
+                writer.Double(_roll);
+                writer.EndObject();
+            }
+        private:
+            double _pitch, _yaw, _roll;
     };
 
     class ObservationTrackedPosition {
@@ -46,7 +71,9 @@ namespace moface {
 
     class ObservationFeed {
         public:
-            ObservationFeed(int64 timestamp) : _timestamp(timestamp), _tracked_positions() {}
+            ObservationFeed(
+                double timestamp, double pitch, double yaw, double roll
+            ) : _timestamp(timestamp), _rotation(new ObservationRotation(pitch, yaw, roll)), _tracked_positions() {}
             ObservationFeed& operator=(const ObservationFeed& rhs) {
                 _timestamp = rhs._timestamp;
                 _tracked_positions = rhs._tracked_positions;
@@ -56,11 +83,17 @@ namespace moface {
             void addTrackedPosition(const ObservationTrackedPosition& tracked_position) {
                 _tracked_positions.push_back(tracked_position);
             }
+            // void addRotation(ObservationRotation& rotation) {
+            //     _rotation = std::addressof(rotation);
+            // }
             template <typename Writer>
             void serialize(Writer& writer) const {
                 writer.StartObject();
                 writer.String("timestamp");
-                writer.Int64(_timestamp);
+                writer.Double(_timestamp);
+                writer.String("rotation");
+                _rotation->serialize(writer);
+                writer.String("tracked_position");
                 writer.StartArray();
                 for (
                     std::vector<ObservationTrackedPosition>::const_iterator pos_itr = _tracked_positions.begin();
@@ -72,7 +105,8 @@ namespace moface {
                 writer.EndObject();
             }
         private:
-            int64 _timestamp;
+            double _timestamp;
+            ObservationRotation *_rotation;
             std::vector<ObservationTrackedPosition> _tracked_positions;
     };
 
@@ -121,7 +155,9 @@ namespace moface {
                 #else
                 writer.String(_type.c_str(), static_cast<SizeType>(_type.length()));
                 #endif
+                writer.String("roi");
                 _roi->serialize(writer);
+                writer.String("feeds");
                 writer.StartArray();
                 for (
                     std::vector<ObservationFeed>::const_iterator feed_itr = _feeds.begin();
@@ -159,6 +195,7 @@ namespace moface {
                 #else
                 writer.String(_name.c_str(), static_cast<SizeType>(_name.length()));
                 #endif
+                writer.String("actions");
                 writer.StartArray();
                 for (
                     std::vector<ObservationAction>::const_iterator action_itr = _actions.begin();

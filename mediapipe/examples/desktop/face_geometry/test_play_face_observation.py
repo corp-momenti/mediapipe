@@ -81,7 +81,8 @@ def on_key_press(symbol, modifier):
 
 with open('test_json.json') as data_file:
     data = json.load(data_file)
-df = pd.json_normalize(data['objects'][0]['actions'][0]['feeds'], 'tracked_positions')
+#df = pd.json_normalize(data['objects'][0]['actions'][0]['feeds'], 'tracked_positions')
+df = pd.json_normalize(data['objects'][0]['actions'][0]['feeds'])
 
 print(df)
 
@@ -89,16 +90,16 @@ fig = plt.figure()
 st = fig.suptitle("angles", fontsize="x-large")
 
 ax1 = fig.add_subplot(311)
-ax1.plot(df['x'])
-ax1.set_title("x")
+ax1.plot(df['rotation.pitch'])
+ax1.set_title("pitch")
 
 ax2 = fig.add_subplot(312)
-ax2.plot(df['y'])
-ax2.set_title("y")
+ax2.plot(df['rotation.yaw'])
+ax2.set_title("yaw")
 
 ax3 = fig.add_subplot(313)
-ax3.plot(df['z'])
-ax3.set_title("z")
+ax3.plot(df['rotation.roll'])
+ax3.set_title("roll")
 
 fig.tight_layout()
 
