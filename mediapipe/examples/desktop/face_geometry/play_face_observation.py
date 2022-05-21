@@ -7,6 +7,8 @@ import time
 
 play_order = 0
 
+action_selection = 0
+
 # width of window
 width = 720
 
@@ -20,12 +22,12 @@ title = "PlayActionTest"
 window = pyglet.window.Window(width, height, title)
 
 # observation path
-observation_path = "/Users/hoyounkim/Work/Momenti/Research/mediapipe/mediapipe/examples/desktop/face_geometry/face-observation/c7f2c127-b534-47ba-806b-cb0274a34671.json"
+observation_path = "/Users/hoyounkim/Work/Momenti/Research/mediapipe/mediapipe/examples/desktop/face_geometry/face-observation/c97916a4-e929-4033-9c88-0a0bd1482959.json"
 
 with open(observation_path) as data_file:
     data = json.load(data_file)
 #df = pd.json_normalize(data['objects'][0]['actions'][0]['feeds'], 'tracked_positions')
-df = pd.json_normalize(data['objects'][0]['actions'][0]['feeds'])
+df = pd.json_normalize(data['objects'][0]['actions'][action_selection]['feeds'])
 
 print(df)
 
@@ -90,10 +92,10 @@ def on_key_press(symbol, modifier):
 	global play_order
 	# key "p" get press
 	if symbol == pyglet.window.key.P:
-		if play_order < len(data['objects'][0]['actions'][0]['feeds']) :
+		if play_order < len(data['objects'][0]['actions'][action_selection]['feeds']) :
 			# seek & pause the video
-			print('seek at : ', data['objects'][0]['actions'][0]['feeds'][play_order]['timestamp'])
-			player.seek(data['objects'][0]['actions'][0]['feeds'][play_order]['timestamp'])
+			print('seek at : ', data['objects'][0]['actions'][action_selection]['feeds'][play_order]['timestamp'])
+			player.seek(data['objects'][0]['actions'][action_selection]['feeds'][play_order]['timestamp'])
 			player.pause()
 			# printing message
 			play_order = play_order + 1

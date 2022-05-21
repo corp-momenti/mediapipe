@@ -80,7 +80,6 @@ void showDebugInfo(
   cv::Point2f nose,
   cv::Mat output_frame_mat
 ) {
-    LOG(INFO) << "state : " << state;
     int text_left_align_pos = output_frame_mat.cols / 2;
     cv::putText(
       output_frame_mat,
@@ -302,7 +301,7 @@ void addDragToFaceObservation(
     new_feed->addTrackedPosition(*new_track);
     new_action->addFeed(*new_feed);
   }
-  (face_observation->lastObject()).addAction(*new_action);
+  face_observation->lastObject().addAction(*new_action);
   return;
 }
 
@@ -319,7 +318,10 @@ absl::Status RunMPPGraph() {
 
   std::string calculator_graph_config_contents;
 
-  //std::filesystem::remove_all(kDetectedReferenceFramePath);
+  std::filesystem::remove_all(kDetectedReferenceFramePath);
+  std::filesystem::remove_all(kDetectedFaceObservationPath);
+  std::filesystem::remove_all(kOuputVideoPath);
+
   std::filesystem::create_directories(kDetectedReferenceFramePath);
   std::filesystem::create_directories(kDetectedFaceObservationPath);
   std::filesystem::create_directories(kOuputVideoPath);
@@ -540,6 +542,11 @@ absl::Status RunMPPGraph() {
         cur_state = moface::eNop;
         break;
       case moface::eNop:
+        if (isWithinReferenceRange(pitch, yaw, roll)) {
+          prev_state = cur_state;
+          cur_state = moface::eReady;
+          face_observation_snapshot_array.clear();
+        }
         break;
       default:
         LOG(INFO) << "not available state!!!!";
@@ -558,7 +565,6 @@ absl::Status RunMPPGraph() {
         RET_CHECK(writer.isOpened());
     }
     writer.write(output_frame_mat);
-
 
     frame_id ++;
 

@@ -145,7 +145,7 @@ namespace moface {
             void addFeed(const ObservationFeed& feed) {
                 _feeds.push_back(feed);
             }
-            ~ObservationAction() { delete _roi; }
+            ~ObservationAction() { /*delete _roi;*/ /* why is this making a crash when adding an action to an object??? */}
             template <typename Writer>
             void serialize(Writer& writer) const {
                 writer.StartObject();
