@@ -37,6 +37,20 @@ cc_library(
 )
 
 cc_library(
+    name = "moface_mobile_gpu_deps",
+    deps = [
+        "//mediapipe/calculators/core:flow_limiter_calculator",
+        "//mediapipe/calculators/core:gate_calculator",
+        "//mediapipe/calculators/core:immediate_mux_calculator",
+        "//mediapipe/calculators/image:image_properties_calculator",
+        "//mediapipe/framework/tool:switch_container",
+        "//mediapipe/graphs/face_effect/subgraphs:single_face_geometry_from_detection_gpu",
+        "//mediapipe/graphs/face_effect/subgraphs:single_face_geometry_from_landmarks_gpu",
+        "//mediapipe/modules/face_geometry:env_generator_calculator",
+    ],
+)
+
+cc_library(
     name = "desktop_live_calculators",
     deps = [
         "//mediapipe/calculators/core:flow_limiter_calculator",
@@ -50,4 +64,11 @@ mediapipe_binary_graph(
     graph = "face_effect_gpu.pbtxt",
     output_name = "face_effect_gpu.binarypb",
     deps = [":face_effect_gpu_deps"],
+)
+
+mediapipe_binary_graph(
+    name = "moface_mobile_gpu_binary_graph",
+    graph = "moface_mobile_gpu.pbtxt",
+    output_name = "moface_mobile_gpu.binarypb",
+    deps = [":moface_mobile_gpu_deps"],
 )
