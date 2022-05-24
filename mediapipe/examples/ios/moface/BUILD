@@ -14,18 +14,20 @@
 
 load(
     "@build_bazel_rules_apple//apple:ios.bzl",
-    "ios_static_framework"
+    "ios_framework"
 )
 
 licenses(["notice"])
 
 MIN_IOS_VERSION = "11.0"
 
-ios_static_framework(
+ios_framework(
     name = "MofaceFramework",
     hdrs = [
         "MofaceFramework.h",
     ],
+    infoplists = ["Info.plist"],
+    bundle_id = "tv.momenti.MofaceEngine",
     families = ["iphone", "ipad"],
     minimum_os_version = MIN_IOS_VERSION,
     deps = [

@@ -45,7 +45,7 @@ cc_library(
         "//mediapipe/calculators/image:image_properties_calculator",
         "//mediapipe/framework/tool:switch_container",
         "//mediapipe/graphs/face_effect/subgraphs:single_face_geometry_from_detection_gpu",
-        "//mediapipe/graphs/face_effect/subgraphs:single_face_geometry_from_landmarks_gpu",
+        "//mediapipe/graphs/face_effect/subgraphs:moface_single_face_geometry_from_landmarks_gpu",
         "//mediapipe/modules/face_geometry:env_generator_calculator",
     ],
 )

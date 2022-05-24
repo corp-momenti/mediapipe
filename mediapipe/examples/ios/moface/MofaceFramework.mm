@@ -56,6 +56,7 @@ static const int kMatrixTranslationZIndex = 14;
     if (!resource || resource.length == 0) {
         return nil;
     }
+
     NSURL* graphURL = [bundle URLForResource:resource withExtension:@"binarypb"];
     NSData* data = [NSData dataWithContentsOfURL:graphURL options:0 error:&configLoadError];
     if (!data) {
@@ -96,7 +97,8 @@ static const int kMatrixTranslationZIndex = 14;
 {
     self = [super init];
     if (self) {
-
+        self.eventCallback = eventCallback;
+        self.warningCallback = warningCallback;
         dispatch_queue_attr_t qosAttribute = dispatch_queue_attr_make_with_qos_class(
              DISPATCH_QUEUE_SERIAL, QOS_CLASS_USER_INTERACTIVE, /*relative_priority=*/0);
         _videoQueue = dispatch_queue_create(kVideoQueueLabel, qosAttribute);
@@ -106,6 +108,9 @@ static const int kMatrixTranslationZIndex = 14;
         // Set maxFramesInFlight to a small value to avoid memory contention for real-time processing.
         self.mediapipeGraph.maxFramesInFlight = 2;
         [self startGraph];
+        NSLog(@"Initilaized MofaceFramework!!!");
+        self.eventCallback(ReferenceDetected);
+        self.warningCallback(MoveToCenter);
     }
     return self;
 }

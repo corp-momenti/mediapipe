@@ -64,9 +64,9 @@ static const int kSelectedEffectIdGlasses = 2;
   IBOutlet UILabel* _noCameraLabel;
   /// Inform the user about how to switch between effects.
   UILabel* _effectSwitchingHintLabel;
-    
+
   IBOutlet UILabel* _captureInfo;
-    
+
   /// Display the camera preview frames.
   IBOutlet UIView* _liveView;
   /// Render frames in a layer.
@@ -282,7 +282,7 @@ static const int kSelectedEffectIdGlasses = 2;
       const auto& faceGeometry = multiFaceGeometry[faceIndex];
       NSLog(@"\tApprox. distance away from camera for face[%d]: %.6f cm", faceIndex,
             -faceGeometry.pose_transform_matrix().packed_data(kMatrixTranslationZIndex));
-        
+
         float pitch = asin(faceGeometry.pose_transform_matrix().packed_data(6));
         float yaw, roll;
         if (cos(pitch) > 0.0001) {
@@ -292,11 +292,11 @@ static const int kSelectedEffectIdGlasses = 2;
             yaw = 0.0;
             roll = atan2(-faceGeometry.pose_transform_matrix().packed_data(1), faceGeometry.pose_transform_matrix().packed_data(0));
         }
-        
+
         pitch = fmod(((pitch * 180.0 / M_PI) + 360.0), 360.0);
         yaw = fmod(((yaw * 180.0 / M_PI) + 360.0), 360);
         roll = fmod(((roll * 180.0 / M_PI) + 360.0), 360);
-        
+
         //NSLog(@"pitch [%f], yaw [%f], roll [%f]", pitch, yaw, roll);
         NSString* info = [NSString stringWithFormat:@"pitch [%f], \nyaw [%f], \nroll [%f]",
                           pitch,
@@ -305,7 +305,7 @@ static const int kSelectedEffectIdGlasses = 2;
         dispatch_async(dispatch_get_main_queue(), ^{
             [_captureInfo setText:info];
         });
-        
+
 //        euler.x = asinf(-mat._32);                  // Pitch
 //        if (cosf(euler.x) > 0.0001)                 // Not at poles
 //        {
