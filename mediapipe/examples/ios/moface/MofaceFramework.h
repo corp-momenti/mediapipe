@@ -31,5 +31,4 @@ typedef void(^WarningCallback)(WarningType warning);
     - (instancetype)initWithCallbacks:(EventCallback)eventCallback warningCallback:(WarningCallback)warningCallback;
     - (void)feed:(CVPixelBufferRef)imageBuffer;
     - (NSString *)stop;
-//@property (nonatomic, copy) PickerCallback callback;
 @end
