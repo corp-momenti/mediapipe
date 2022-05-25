@@ -8,15 +8,13 @@ cc_binary(
     deps = [
         "//mediapipe/examples/desktop:moface_run_graph_main",
         "//mediapipe/graphs/face_effect:desktop_live_calculators",
-        ":moface_calculator",
+        ":moface_calculator"
     ]
 )
 
 cc_library(
     name = "moface_calculator",
-    srcs = ["moface_calculator/moface_calculator.cc",
-            "moface_run_graph_main.cc"
-    ],
+    srcs = ["moface_calculator/moface_calculator.cc"],
     hdrs = [
         "moface_calculator/moface_calculator.h",
         "moface_calculator/include/rapidjson/document.h",

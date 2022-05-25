@@ -31,9 +31,9 @@ constexpr char kOutputFaceLandmarkStream[] = "multi_face_landmarks";
 constexpr char kOutputFaceGeometryStream[] = "multi_face_geometry";
 constexpr char kWindowName[] = "MediaPipe";
 
-constexpr char kDetectedReferenceFramePath[] = "./mediapipe/examples/desktop/moface/reference";
-constexpr char kDetectedFaceObservationPath[] = "./mediapipe/examples/desktop/moface/face-observation";
-constexpr char kOuputVideoPath[] = "./mediapipe/examples/desktop/moface/output-video";
+constexpr char kDetectedReferenceFramePath[] = "./mediapipe/examples/desktop/moface_desktop/reference";
+constexpr char kDetectedFaceObservationPath[] = "./mediapipe/examples/desktop/moface_desktop/face-observation";
+constexpr char kOuputVideoPath[] = "./mediapipe/examples/desktop/moface_desktop/output-video";
 
 ABSL_FLAG(std::string, calculator_graph_config_file, "",
           "Name of file containing text format CalculatorGraphConfig proto.");
@@ -44,8 +44,9 @@ ABSL_FLAG(std::string, output_video_path, "",
           "Full path of where to save result (.mp4 only). "
           "If not provided, show result in a window.");
 
-void showGeometry(
+void showDebugInfo(
   std::string pitch, std::string yaw, std::string roll, std::string dist,
+  std::string state, std::string notification,
   cv::Point2f nose,
   cv::Mat output_frame_mat
 ) {
@@ -86,33 +87,19 @@ void showGeometry(
       CV_RGB(255, 0, 0),
       2
     );
-}
-
-void showCurState(
-  std::string state,
-  cv::Mat output_frame_mat
-) {
-    int text_left_align_pos = output_frame_mat.cols / 2;
     cv::putText(
       output_frame_mat,
-      state,
-      cv::Point(text_left_align_pos, 120),
+      notification,
+      cv::Point(text_left_align_pos, 100),
       cv::FONT_HERSHEY_DUPLEX,
       0.5,
       CV_RGB(255, 0, 0),
       2
     );
-}
-
-void showNofification(
-  std::string notifications,
-  cv::Mat output_frame_mat
-) {
-    int text_left_align_pos = output_frame_mat.cols / 2;
     cv::putText(
       output_frame_mat,
-      notifications,
-      cv::Point(text_left_align_pos, 100),
+      state,
+      cv::Point(text_left_align_pos, 120),
       cv::FONT_HERSHEY_DUPLEX,
       0.5,
       CV_RGB(255, 0, 0),
@@ -127,73 +114,75 @@ std::string pitch_text, roll_text, yaw_text, distance_text,
   state_text = "init", notification_text = "";
 
 void eventNotifier(moface::MoFaceEventType event) {
-  //showNofification
-  std::string noficifation_text;
+  std::string event_text;
   switch (event) {
     case moface::eRightActionDetected:
-      noficifation_text = "Right Drag Action Detected";
+      event_text = "Right Drag Action Detected";
     break;
     case moface::eLeftActionDetected:
-      noficifation_text = "Left Drag Action Detected";
+      event_text = "Left Drag Action Detected";
     break;
     case moface::eUpActionDetected:
-      noficifation_text = "Up Drag Action Detected";
+      event_text = "Up Drag Action Detected";
     break;
     case moface::eDownActionDetected:
-      noficifation_text = "Down Drag Action Detected";
+      event_text = "Down Drag Action Detected";
     break;
     case moface::eBlickActionDetected:
-      noficifation_text = "Blink Drag Action Detected";
+      event_text = "Blink Drag Action Detected";
     break;
     case moface::eMouthActionDetected:
-      noficifation_text = "Mouth Drag Action Detected";
+      event_text = "Mouth Drag Action Detected";
     break;
     case moface::eAngryActionDetected:
-      noficifation_text = "Anggry Drag Action Detected";
+      event_text = "Anggry Drag Action Detected";
     break;
     case moface::eHappyActionDetected:
-      noficifation_text = "Happy Drag Action Detected";
+      event_text = "Happy Drag Action Detected";
     break;
     case moface::eReferenceDetected:
-      noficifation_text = "Reference Captured";
+      event_text = "Reference Captured";
       std::string tmp_file_name = std::string(kDetectedReferenceFramePath) + "/" + moface::generate_uuid_v4() + ".png";
       cv::imwrite(tmp_file_name, output_frame_mat);
     break;
   }
-  showNofification(noficifation_text, output_frame_mat);
+  notification_text = event_text;
 }
 
 void warningNotifier(moface::MoFaceWarningType event) {
   //showNotification
-    std::string noficifation_text;
+    std::string event_text;
   switch (event) {
     case moface::eTooFar:
-      noficifation_text = "Face Too Far";
+      event_text = "Face Too Far";
     break;
     case moface::eTooClose:
-      noficifation_text = "Fase Too Close";
+      event_text = "Fase Too Close";
     break;
     case moface::eGoingBackward:
-      noficifation_text = "Face Going Backward";
+      event_text = "Face Going Backward";
     break;
     case moface::eTooSlow:
-      noficifation_text = "Face Too Slow";
+      event_text = "Face Too Slow";
     break;
     case moface::eInvalidDragAction:
-      noficifation_text = "Invalidd Drag Action";
+      event_text = "Invalidd Drag Action";
     break;
     case moface::eNoFace:
-      noficifation_text = "No Face";
+      event_text = "No Face";
     break;
     case moface::eTimeout:
-      noficifation_text = "Timeout";
+      event_text = "Timeout";
     break;
   }
-  showNofification(noficifation_text, output_frame_mat);
+  notification_text = event_text;
 }
 
 void geometryNotifier(double pitch, double yaw, double roll, double distance) {
-  showGeometry(std::to_string(pitch), std::to_string(yaw), std::to_string(roll), std::to_string(distance), nose_point, output_frame_mat);
+  pitch_text = std::to_string(pitch);
+  yaw_text = std::to_string(yaw);
+  roll_text = std::to_string(roll);
+  distance_text = std::to_string(distance);
 }
 
 absl::Status RunMPPGraph() {
@@ -361,7 +350,11 @@ absl::Status RunMPPGraph() {
     }
     writer.write(output_frame_mat);
 
-    showCurState(moface_calculator->curState(), output_frame_mat);
+    showDebugInfo(
+      pitch_text, yaw_text, roll_text, distance_text,
+      state_text, notification_text, nose_point,
+      output_frame_mat
+    );
     cv::imshow(kWindowName, output_frame_mat);
     // Press any key to exit.
     const int pressed_key = cv::waitKey(5);
