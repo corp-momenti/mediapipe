@@ -5,27 +5,18 @@ package(default_visibility = ["//mediapipe/examples:__subpackages__"])
 
 cc_binary(
     name = "moface_cpu",
-    srcs = ["moface_run_graph_main.cc"],
     deps = [
-        ":moface_calculator",
+        "//mediapipe/examples/desktop:moface_run_graph_main",
         "//mediapipe/graphs/face_effect:desktop_live_calculators",
-        "//mediapipe/framework:calculator_framework",
-        "//mediapipe/framework/formats:image_frame",
-        "//mediapipe/framework/formats:image_frame_opencv",
-        "//mediapipe/framework/port:file_helpers",
-        "//mediapipe/framework/port:opencv_highgui",
-        "//mediapipe/framework/port:opencv_imgproc",
-        "//mediapipe/framework/port:opencv_video",
-        "//mediapipe/framework/port:parse_text_proto",
-        "//mediapipe/framework/port:status",
-        "@com_google_absl//absl/flags:flag",
-        "@com_google_absl//absl/flags:parse"
+        ":moface_calculator",
     ]
 )
 
 cc_library(
     name = "moface_calculator",
-    srcs = ["moface_calculator/moface_calculator.cc"],
+    srcs = ["moface_calculator/moface_calculator.cc",
+            "moface_run_graph_main.cc"
+    ],
     hdrs = [
         "moface_calculator/moface_calculator.h",
         "moface_calculator/include/rapidjson/document.h",
@@ -59,6 +50,17 @@ cc_library(
     includes = ["moface_calculator/include"],
     deps = [
         "//mediapipe/framework/formats:landmark_cc_proto",
-        "//mediapipe/modules/face_geometry/protos:face_geometry_cc_proto"
+        "//mediapipe/modules/face_geometry/protos:face_geometry_cc_proto",
+        "//mediapipe/framework:calculator_framework",
+        "//mediapipe/framework/formats:image_frame",
+        "//mediapipe/framework/formats:image_frame_opencv",
+        "//mediapipe/framework/port:file_helpers",
+        "//mediapipe/framework/port:opencv_highgui",
+        "//mediapipe/framework/port:opencv_imgproc",
+        "//mediapipe/framework/port:opencv_video",
+        "//mediapipe/framework/port:parse_text_proto",
+        "//mediapipe/framework/port:status",
+        "@com_google_absl//absl/flags:flag",
+        "@com_google_absl//absl/flags:parse",
     ]
 )

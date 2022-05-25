@@ -22,8 +22,8 @@
 #include "mediapipe/framework/port/status.h"
 #include "mediapipe/framework/formats/landmark.pb.h"
 #include "mediapipe/modules/face_geometry/protos/face_geometry.pb.h"
-#include "moface_calculator/moface_calculator.h"
-#include "moface_calculator/include/custum_uuid.h"  //todo get it out of moface calculator
+#include "moface_desktop/moface_calculator/moface_calculator.h"
+#include "moface_desktop/moface_calculator/include/custum_uuid.h"  //todo get it out of moface calculator
 
 constexpr char kInputStream[] = "input_video";
 constexpr char kOutputStream[] = "output_video";
@@ -31,9 +31,9 @@ constexpr char kOutputFaceLandmarkStream[] = "multi_face_landmarks";
 constexpr char kOutputFaceGeometryStream[] = "multi_face_geometry";
 constexpr char kWindowName[] = "MediaPipe";
 
-constexpr char kDetectedReferenceFramePath[] = "./mediapipe/examples/desktop/face_geometry/reference";
-constexpr char kDetectedFaceObservationPath[] = "./mediapipe/examples/desktop/face_geometry/face-observation";
-constexpr char kOuputVideoPath[] = "./mediapipe/examples/desktop/face_geometry/output-video";
+constexpr char kDetectedReferenceFramePath[] = "./mediapipe/examples/desktop/moface/reference";
+constexpr char kDetectedFaceObservationPath[] = "./mediapipe/examples/desktop/moface/face-observation";
+constexpr char kOuputVideoPath[] = "./mediapipe/examples/desktop/moface/output-video";
 
 ABSL_FLAG(std::string, calculator_graph_config_file, "",
           "Name of file containing text format CalculatorGraphConfig proto.");
@@ -369,7 +369,7 @@ absl::Status RunMPPGraph() {
 
   }
 
-  //todo //face_observation_object->updateMediaFilePath(vido_out_file);
+  moface_calculator->updateMediaFilePath(vido_out_file);
   std::filesystem::path path {std::string(kDetectedFaceObservationPath) + "/" + moface::generate_uuid_v4() + ".json"};
   std::ofstream ofs(path);
   ofs << moface_calculator->getFaceObservation();

@@ -395,3 +395,7 @@ std::string MofaceCalculator::getFaceObservation() {
 std::string MofaceCalculator::curState() {
     return state_to_string(cur_state_);
 }
+
+void MofaceCalculator::updateMediaFilePath(std::string &file_path) {
+    face_observation_object_->updateMediaFilePath(file_path);
+}

@@ -83,8 +83,8 @@ absl::Status RunMPPGraph() {
   LOG(INFO) << "Start running the calculator graph.";
   ASSIGN_OR_RETURN(mediapipe::OutputStreamPoller poller,
                    graph.AddOutputStreamPoller(kOutputStream));
-  ASSIGN_OR_RETURN(mediapipe::OutputStreamPoller landmark_poller,
-                   graph.AddOutputStreamPoller(kOutputFaceGeometryStream));
+  // ASSIGN_OR_RETURN(mediapipe::OutputStreamPoller landmark_poller,
+  //                  graph.AddOutputStreamPoller(kOutputFaceLandmarkStream));
 
   MP_RETURN_IF_ERROR(graph.StartRun({}));
 
@@ -123,23 +123,24 @@ absl::Status RunMPPGraph() {
                           .At(mediapipe::Timestamp(frame_timestamp_us))));
 
     //Get the graph result packet, or stop if that fails.
-    // mediapipe::Packet packet;
-    // if (!poller.Next(&packet)) {
-    //   LOG(INFO) << "No output video packet";
-    //   break;
-    // }
-    // auto& output_frame = packet.Get<mediapipe::ImageFrame>();
-
-    mediapipe::Packet landmark_packet;
-    if (!landmark_poller.Next(&landmark_packet)) {
-      LOG(INFO) << "No landamrk packet";
+    mediapipe::Packet packet;
+    if (!poller.Next(&packet)) {
+      LOG(INFO) << "No output video packet";
       break;
-    } else {
-      //LOG(INFO) << "landamrk packet captured";
-      std::string output_data;
-      absl::StrAppend(&output_data, landmark_packet.Timestamp().Value(), ",");
     }
+    auto& output_frame = packet.Get<mediapipe::ImageFrame>();
 
+    // mediapipe::Packet landmark_packet;
+    // if (!landmark_poller.Next(&landmark_packet)) {
+    //   LOG(INFO) << "No landamrk packet";
+    //   break;
+    // } else {
+    //   //LOG(INFO) << "landamrk packet captured";
+    //   std::string output_data;
+    //   absl::StrAppend(&output_data, landmark_packet.Timestamp().Value(), ",");
+    // }
+
+    /*
     const auto& multiFaceGeometry = landmark_packet.Get<std::vector<::mediapipe::face_geometry::FaceGeometry>>();
     // printf("Number of face instances with landmarks: %lu",
     //       multi_face_landmarks.size());
@@ -182,9 +183,10 @@ absl::Status RunMPPGraph() {
             // });
 
         }
+        */
 
     //Convert back to opencv for display or saving.
-    cv::Mat output_frame_mat = camera_frame;//mediapipe::formats::MatView(&output_frame);
+    cv::Mat output_frame_mat = mediapipe::formats::MatView(&output_frame);
     cv::cvtColor(output_frame_mat, output_frame_mat, cv::COLOR_RGB2BGR);
     if (save_video) {
       if (!writer.isOpened()) {
