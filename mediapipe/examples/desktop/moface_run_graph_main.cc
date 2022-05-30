@@ -128,7 +128,7 @@ void eventNotifier(moface::MoFaceEventType event) {
     case moface::eDownActionDetected:
       event_text = "Down Drag Action Detected";
     break;
-    case moface::eBlickActionDetected:
+    case moface::eBlinkActionDetected:
       event_text = "Blink Drag Action Detected";
     break;
     case moface::eMouthActionDetected:
@@ -292,20 +292,8 @@ absl::Status RunMPPGraph() {
     if (!landmark_poller.Next(&landmark_packet)) {
       LOG(INFO) << "No landamrk packet";
       break;
-    } else {
-      //LOG(INFO) << "landamrk packet captured";
-      // std::string output_data;
-      // absl::StrAppend(&output_data, landmark_packet.Timestamp().Value(), ",");
     }
     const auto& multi_face_landmarks = landmark_packet.Get<std::vector<::mediapipe::NormalizedLandmarkList>>();
-    // LOG(INFO) << "[" << landmark_packet.Timestamp().Value() << "] Number of face instances with landmark : " << multi_face_landmarks.size();
-    // for (int face_index = 0; face_index < multi_face_landmarks.size(); ++face_index) {
-    //   const auto& landmarks = multi_face_landmarks[face_index];
-    //   LOG(INFO) << "Number of landmarks for face[" << face_index << "] size : " << landmarks.landmark_size();
-    //   for (int i = 0; i < landmarks.landmark_size(); ++i) {
-    //     LOG(INFO) << "\tLandmark[" << i << "] (" << landmarks.landmark(i).x() << ", " << landmarks.landmark(i).y() << ", " << landmarks.landmark(i).z() << ")";
-    //   }
-    // }
 
     //Get the graph result packet for geometry sstream
     mediapipe::Packet geometry_packet;
@@ -313,28 +301,6 @@ absl::Status RunMPPGraph() {
         LOG(INFO) << "No geometry packet";
     }
     const auto& multi_face_geometry = geometry_packet.Get<std::vector<::mediapipe::face_geometry::FaceGeometry>>();
-    float pitch, yaw, roll, distance;
-    //LOG(INFO) << "[" << geometry_packet.Timestamp().Value() << "] Number of face instances with face geometry : " << multi_face_geometry.size();
-    for (int faceIndex = 0; faceIndex < multi_face_geometry.size(); ++faceIndex) {
-      const auto& faceGeometry = multi_face_geometry[faceIndex];
-      pitch = asin(faceGeometry.pose_transform_matrix().packed_data(6));
-      if (cos(pitch) > 0.0001) {
-          yaw = atan2(faceGeometry.pose_transform_matrix().packed_data(2), faceGeometry.pose_transform_matrix().packed_data(10));
-          roll = atan2(faceGeometry.pose_transform_matrix().packed_data(4), faceGeometry.pose_transform_matrix().packed_data(5));
-      } else {
-          yaw = 0.0;
-          roll = atan2(-faceGeometry.pose_transform_matrix().packed_data(1), faceGeometry.pose_transform_matrix().packed_data(0));
-      }
-      pitch = fmod(((pitch * 180.0 / M_PI) + 360.0), 360.0);
-      yaw = fmod(((yaw * 180.0 / M_PI) + 360.0), 360);
-      roll = fmod(((roll * 180.0 / M_PI) + 360.0), 360);
-      distance = -faceGeometry.pose_transform_matrix().packed_data(14);
-      //LOG(INFO) << "pitch : " << pitch << ", yaw : " << yaw << ", roll : " << roll << ", distance : " << distance;
-      pitch_text = std::to_string(pitch);
-      yaw_text = std::to_string(yaw);
-      roll_text = std::to_string(roll);
-      distance_text = std::to_string(distance);
-    }
 
     moface_calculator->sendObservations(multi_face_landmarks[0], multi_face_geometry[0]);
 

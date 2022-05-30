@@ -14,8 +14,20 @@ cc_binary(
 
 cc_library(
     name = "moface_calculator",
-    srcs = ["moface_calculator/moface_calculator.cc"],
+    srcs = [
+        "moface_calculator/moface_calculator.cc",
+        "moface_calculator/describe_drag.cc",
+        "moface_calculator/describe_eyes.cc",
+        "moface_calculator/describe_mouth.cc",
+        "moface_calculator/describe_reference.cc",
+        "moface_calculator/util_point.cc"
+    ],
     hdrs = [
+        "moface_calculator/describe_mouth.h",
+        "moface_calculator/describe_eyes.h",
+        "moface_calculator/describe_drag.h",
+        "moface_calculator/describe_reference.h",
+        "moface_calculator/util_point.h",
         "moface_calculator/moface_calculator.h",
         "moface_calculator/include/rapidjson/document.h",
         "moface_calculator/include/rapidjson/reader.h",

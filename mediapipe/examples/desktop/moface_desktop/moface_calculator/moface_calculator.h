@@ -13,7 +13,7 @@ namespace moface {
         eLeftActionDetected,
         eUpActionDetected,
         eDownActionDetected,
-        eBlickActionDetected,
+        eBlinkActionDetected,
         eMouthActionDetected,
         eAngryActionDetected,
         eHappyActionDetected,
