@@ -113,32 +113,47 @@ cv::Point2f nose_point;
 std::string pitch_text, roll_text, yaw_text, distance_text,
   state_text = "init", notification_text = "";
 
+bool left_drag_captured = false;
+bool right_drag_captured = false;
+bool up_drag_captured = false;
+bool down_drag_captured = false;
+bool blink_captured = false;
+bool angry_captured = false;
+bool happy_captured = false;
+
 void eventNotifier(moface::MoFaceEventType event) {
   std::string event_text;
   switch (event) {
     case moface::eRightActionDetected:
       event_text = "Right Drag Action Detected";
+      right_drag_captured = true;
     break;
     case moface::eLeftActionDetected:
       event_text = "Left Drag Action Detected";
+      left_drag_captured = true;
     break;
     case moface::eUpActionDetected:
       event_text = "Up Drag Action Detected";
+      up_drag_captured = true;
     break;
     case moface::eDownActionDetected:
       event_text = "Down Drag Action Detected";
+      down_drag_captured = true;
     break;
     case moface::eBlinkActionDetected:
       event_text = "Blink Drag Action Detected";
+      blink_captured = true;
     break;
     case moface::eMouthActionDetected:
       event_text = "Mouth Drag Action Detected";
     break;
     case moface::eAngryActionDetected:
       event_text = "Anggry Drag Action Detected";
+      angry_captured = true;
     break;
     case moface::eHappyActionDetected:
       event_text = "Happy Drag Action Detected";
+      happy_captured = true;
     break;
     case moface::eReferenceDetected:
       event_text = "Reference Captured";
@@ -248,6 +263,18 @@ absl::Status RunMPPGraph() {
   LOG(INFO) << "Start grabbing and processing frames.";
   bool grab_frames = true;
   while (grab_frames) {
+    if (
+      left_drag_captured &&
+      right_drag_captured &&
+      up_drag_captured &&
+      down_drag_captured &&
+      blink_captured &&
+      angry_captured &&
+      happy_captured
+    ) {
+      std::cout << "All actions are captured!!!!";
+      break;
+    }
     // Capture opencv camera or video frame.
     cv::Mat camera_frame_raw;
     capture >> camera_frame_raw;
