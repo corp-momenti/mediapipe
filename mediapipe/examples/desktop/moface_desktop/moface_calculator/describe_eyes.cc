@@ -30,6 +30,8 @@ constexpr int kRightEyeVertial_2_DownEdge = 153;
 constexpr int kRightEyeHorzRightEdge = 33;
 constexpr int kRightEyeHorzLeftEdge = 133;
 
+constexpr double kEarThreshold = 0.35;
+
 
 std::tuple<int, int> getLeftEyeCenter(
   ::mediapipe::NormalizedLandmarkList const& reference
@@ -155,7 +157,8 @@ bool checkBlinkActionAndAddToFaceObservation(
   for (int i = 0; i < snapshot_array.size(); i ++) {
     double ear = (calculateLeftEAR(snapshot_array[i].landmarks) + calculateRightEAR(snapshot_array[i].landmarks)) * 0.5;
     ear_history.push_back(ear);
-    if (ear < 0.35 && i > 10) {
+    if (ear < kEarThreshold && i > 10) {
+      slices.push_back(std::make_tuple(i, i - 10));
       for (int j = i - 1; j >= 0; j --) {
         if (ear_history[j] > reference_ear) {
           slices.push_back(std::make_tuple(i, j));
@@ -168,5 +171,5 @@ bool checkBlinkActionAndAddToFaceObservation(
     return false;
   }
   addBlinkToFaceObservation(reference, slices[0], snapshot_array, face_observation);
-  return false;
+  return true;
 }

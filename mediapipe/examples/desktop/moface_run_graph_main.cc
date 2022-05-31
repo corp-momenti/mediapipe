@@ -342,7 +342,7 @@ absl::Status RunMPPGraph() {
         RET_CHECK(writer.isOpened());
     }
     writer.write(output_frame_mat);
-
+    state_text = moface_calculator->curState();
     showDebugInfo(
       pitch_text, yaw_text, roll_text, distance_text,
       state_text, notification_text, nose_point,

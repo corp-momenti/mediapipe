@@ -22,7 +22,7 @@
 
 using namespace moface;
 
-constexpr int kNumberOfObservationsForCheckingActions = 150;
+constexpr int kNumberOfObservationsForCheckingActions = 90;
 
 std::string state_to_string(MoFaceState const& in_code) {
     std::string ret_string;
