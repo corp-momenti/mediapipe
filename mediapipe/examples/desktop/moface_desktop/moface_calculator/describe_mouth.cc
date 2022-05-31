@@ -38,8 +38,8 @@ constexpr int kLeftEdgeEndForHappy = 434;
 
 constexpr double kMHARTheshold = 5.0;
 constexpr int kNumOfObservationsToCheck = 10;
-constexpr double kMWARTheshold = 1.3;
-constexpr double kMWARReferece = 1.0;
+constexpr double kMWARTheshold = 95.0;
+constexpr double kMWARReferece = 40.0;
 
 //utils for mouth
 double calculateMHAR(
@@ -220,10 +220,10 @@ bool checkHanppyActionAndAddToFaceObservation(
     for (int i = 0; i < snapshot_array.size(); i ++) {
     double mar2ref = calculateMWAR(reference, snapshot_array[i].landmarks);
     mar_history.push_back(mar2ref);
-    if (mar2ref > kMWARTheshold && i > kNumOfObservationsToCheck) {
+    if (mar2ref >= kMWARTheshold && i > kNumOfObservationsToCheck) {
       for (int j = i - 1; j >= 0; j --) {
         if (mar_history[j] <= kMWARReferece) {
-          slices.push_back(std::make_tuple(i, j));
+          slices.push_back(std::make_tuple(j, i));
           break;
         }
       }
@@ -233,5 +233,5 @@ bool checkHanppyActionAndAddToFaceObservation(
     return false;
   }
   addHappyActionToFaceObservation(reference, slices[0], snapshot_array, face_observation);
-  return false;
+  return true;
 }

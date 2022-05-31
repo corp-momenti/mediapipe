@@ -271,9 +271,9 @@ absl::Status RunMPPGraph() {
       right_drag_captured &&
       up_drag_captured &&
       down_drag_captured &&
-      blink_captured &&*/
-      angry_captured /*&&
-      happy_captured*/
+      blink_captured &&
+      angry_captured &&*/
+      happy_captured
     ) {
       std::cout << "All actions are captured!!!!";
       break;
