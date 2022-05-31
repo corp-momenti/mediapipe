@@ -23,6 +23,7 @@ namespace moface {
     enum MoFaceWarningType {
         eTooFar,
         eTooClose,
+        eGoodDistance,
         eGoingBackward,
         eTooSlow,
         eInvalidDragAction,

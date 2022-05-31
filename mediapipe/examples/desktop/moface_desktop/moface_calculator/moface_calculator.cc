@@ -81,6 +81,7 @@ void MofaceCalculator::sendObservations(
       frame_id_ ++;
       return;
     }
+    warning_callback_(eGoodDistance);
     switch (cur_state_) {
       case moface::eInit:
         prev_state_ = cur_state_;
@@ -112,9 +113,11 @@ void MofaceCalculator::sendObservations(
           if (face_observation_snapshot_array_.size() > kNumberOfObservationsForCheckingActions) {
             if (checkBlinkActionAndAddToFaceObservation(reference_landmark_, face_observation_snapshot_array_, face_observation_object_)) {
               event_callback_(eBlinkActionDetected);
-            } else if (checkAngryActionAndAddToFaceObservation(reference_landmark_, face_observation_snapshot_array_, face_observation_object_)) {
+            }
+            if (checkAngryActionAndAddToFaceObservation(reference_landmark_, face_observation_snapshot_array_, face_observation_object_)) {
               event_callback_(eAngryActionDetected);
-            } else if (checkHanppyActionAndAddToFaceObservation(reference_landmark_, face_observation_snapshot_array_, face_observation_object_)) {
+            }
+            if (checkHanppyActionAndAddToFaceObservation(reference_landmark_, face_observation_snapshot_array_, face_observation_object_)) {
               event_callback_(eHappyActionDetected);
             }
             face_observation_snapshot_array_.clear();

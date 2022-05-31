@@ -36,7 +36,7 @@ constexpr int kLeftEdgeStartForHappy = 291;
 constexpr int kRightEdgeEndForHappy = 214;
 constexpr int kLeftEdgeEndForHappy = 434;
 
-constexpr double kMHARTheshold = 0.5;
+constexpr double kMHARTheshold = 5.0;
 constexpr int kNumOfObservationsToCheck = 10;
 constexpr double kMWARTheshold = 1.3;
 constexpr double kMWARReferece = 1.0;
@@ -122,13 +122,13 @@ bool checkAngryActionAndAddToFaceObservation(
   double reference_mar = calculateMHAR(reference);
   std::vector<double> mar_history;
   std::vector<std::tuple<int, int>> slices;
-    for (int i = 0; i < snapshot_array.size(); i ++) {
+  for (int i = 0; i < snapshot_array.size(); i ++) {
     double mar = calculateMHAR(snapshot_array[i].landmarks);
     mar_history.push_back(mar);
     if (mar > kMHARTheshold && i > kNumOfObservationsToCheck) {
       for (int j = i - 1; j >= 0; j --) {
-        if (mar_history[j] < reference_mar) {
-          slices.push_back(std::make_tuple(i, j));
+        if (mar_history[j] <= reference_mar) {
+          slices.push_back(std::make_tuple(j, i));
           break;
         }
       }
@@ -138,7 +138,7 @@ bool checkAngryActionAndAddToFaceObservation(
     return false;
   }
   addAngryActionToFaceObservation(reference, slices[0], snapshot_array, face_observation);
-  return false;
+  return true;
 }
 
 double calculateMWAR(

@@ -174,6 +174,9 @@ void warningNotifier(moface::MoFaceWarningType event) {
     case moface::eTooClose:
       event_text = "Fase Too Close";
     break;
+    case moface::eGoodDistance:
+      event_text = "Good Distance";
+    break;
     case moface::eGoingBackward:
       event_text = "Face Going Backward";
     break;
@@ -264,13 +267,13 @@ absl::Status RunMPPGraph() {
   bool grab_frames = true;
   while (grab_frames) {
     if (
-      left_drag_captured &&
+      /*left_drag_captured &&
       right_drag_captured &&
       up_drag_captured &&
       down_drag_captured &&
-      blink_captured &&
-      angry_captured &&
-      happy_captured
+      blink_captured &&*/
+      angry_captured /*&&
+      happy_captured*/
     ) {
       std::cout << "All actions are captured!!!!";
       break;

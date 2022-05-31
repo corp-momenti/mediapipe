@@ -19,7 +19,7 @@ constexpr double kReferenceRangeRollMax = 5.0;
 
 //Distance Range
 constexpr double kMaxDistanceLimit = 40.0;
-constexpr double kMinDistanceLimit = 35.0;
+constexpr double kMinDistanceLimit = 30.0;
 
 bool isReferenceFrame(
   double pitch,
