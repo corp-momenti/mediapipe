@@ -267,12 +267,12 @@ absl::Status RunMPPGraph() {
   bool grab_frames = true;
   while (grab_frames) {
     if (
-      /*left_drag_captured &&
+      left_drag_captured &&
       right_drag_captured &&
       up_drag_captured &&
       down_drag_captured &&
       blink_captured &&
-      angry_captured &&*/
+      angry_captured &&
       happy_captured
     ) {
       std::cout << "All actions are captured!!!!";

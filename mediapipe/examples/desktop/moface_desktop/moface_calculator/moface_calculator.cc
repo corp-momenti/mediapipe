@@ -141,6 +141,15 @@ void MofaceCalculator::sendObservations(
           cur_state_ = moface::eReady;
           face_observation_snapshot_array_.clear();
         } else if (hitDragLimit(pitch, yaw, roll)) {
+          moface::FaceObservationSnapShot new_snapshot = {
+            .timestamp = frame_id_ / 30.0, //geometry_packet.Timestamp().Seconds(),
+            .frame_id = frame_id_,
+            .pitch = pitch,
+            .roll = roll,
+            .yaw = yaw
+          };
+          new_snapshot.landmarks = landmarks;
+          face_observation_snapshot_array_.push_back(new_snapshot);
           prev_state_ = cur_state_;
           cur_state_ = moface::eDragAnalyzing;
         } else {

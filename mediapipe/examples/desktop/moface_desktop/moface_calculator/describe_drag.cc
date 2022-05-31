@@ -19,7 +19,7 @@ constexpr double kDragBackwardLimit = 3.0;
 constexpr double kDragSlowLimit = 7.0; // degree per sec
 
 //Drag Right Limit
-constexpr double kDragOutOfRangeLimit = 5.0;
+constexpr double kDragOutOfRangeLimit = 10.0;
 
 //Reference Point
 //  Drag Left : kRightChinIndex -> kLeftChinIndex
@@ -38,8 +38,10 @@ bool hitDragLimit(
   double yaw,
   double roll
 ) {
-    if ( (yaw >= kDragEndingLimit && yaw <= 180.0) ||
-        (yaw >= 180.0 && yaw <= 360.0 - kDragEndingLimit)
+    if ((yaw >= kDragEndingLimit && yaw <= 180.0) ||
+        (yaw >= 180.0 && yaw <= 360.0 - kDragEndingLimit) ||
+        (pitch >= kDragEndingLimit && pitch <= 180.0) ||
+        (pitch >= 180.0 && pitch <= 360.0 - kDragEndingLimit)
     ) {
       std::cout << "angle hit : " << yaw;
       return true;
@@ -87,7 +89,7 @@ bool dragTooSlow(
     pow(last_item.roll - cmp_item.roll,2)*/
   );
   if (kDragSlowLimit >= (angle_distance / time_elapsed)) {
-    std::cout << "Drag Too Slow : Angle Velocity : " <<  (angle_distance / time_elapsed);
+    //std::cout << "Drag Too Slow : Angle Velocity : " <<  (angle_distance / time_elapsed);
     return true;
   }
   return false;
@@ -110,34 +112,15 @@ bool hasValidDrag(
   return true;
 }
 
-bool isRightDrag(
-    std::vector<moface::FaceObservationSnapShot> const& snapshot_array
-) {
-    double last_yaw = snapshot_array.back().yaw;
-    if (last_yaw >= kDragEndingLimit && last_yaw <= 180.0) {
-      std::cout << "right drag angle hit : " << last_yaw;
-      for (auto snap : snapshot_array) {
-        if ( !((snap.pitch >= kDragOutOfRangeLimit && snap.pitch <= 180.0) ||
-              (snap.pitch >= 180 && snap.pitch < 360.0 - kDragOutOfRangeLimit))
-        ) {
-          return false;
-        }
-      }
-      return true;
-    } else {
-      return false;
-    }
-}
-
 bool isLeftDrag(
     std::vector<moface::FaceObservationSnapShot> const& snapshot_array
 ) {
     double last_yaw = snapshot_array.back().yaw;
-    if (last_yaw >= 180.0 && last_yaw <= 360.0 - kDragEndingLimit) {
-      std::cout << "left drag angle hit : " << last_yaw;
+    if (last_yaw >= kDragEndingLimit && last_yaw <= 180.0) {
+      //std::cout << "right drag angle hit : " << last_yaw << std::endl;
       for (auto snap : snapshot_array) {
-        if ( !((snap.pitch >= kDragOutOfRangeLimit && snap.pitch <= 180.0) ||
-              (snap.pitch >= 180 && snap.pitch < 360.0 - kDragOutOfRangeLimit))
+        if ( (snap.pitch >= kDragOutOfRangeLimit && snap.pitch <= 180.0) ||
+             (snap.pitch >= 180 && snap.pitch < 360.0 - kDragOutOfRangeLimit)
         ) {
           return false;
         }
@@ -148,15 +131,15 @@ bool isLeftDrag(
     }
 }
 
-bool isUpDrag(
+bool isRightDrag(
     std::vector<moface::FaceObservationSnapShot> const& snapshot_array
 ) {
-    double last_pitch = snapshot_array.back().pitch;
-    if (last_pitch >= kDragEndingLimit && last_pitch <= 180.0) {
-      std::cout << "up drag angle hit : " << last_pitch;
+    double last_yaw = snapshot_array.back().yaw;
+    if (last_yaw >= 180.0 && last_yaw <= 360.0 - kDragEndingLimit) {
+//      std::cout << "left drag angle hit : " << last_yaw << std::endl;
       for (auto snap : snapshot_array) {
-        if ( !((snap.yaw >= kDragOutOfRangeLimit && snap.yaw <= 180.0) ||
-              (snap.yaw >= 180 && snap.yaw < 360.0 - kDragOutOfRangeLimit))
+        if ((snap.pitch >= kDragOutOfRangeLimit && snap.pitch <= 180.0) ||
+            (snap.pitch >= 180 && snap.pitch < 360.0 - kDragOutOfRangeLimit)
         ) {
           return false;
         }
@@ -171,11 +154,30 @@ bool isDownDrag(
     std::vector<moface::FaceObservationSnapShot> const& snapshot_array
 ) {
     double last_pitch = snapshot_array.back().pitch;
-    if (last_pitch >= 180.0 && last_pitch <= 360.0 - kDragEndingLimit) {
-      std::cout << "down drag angle hit : " << last_pitch;
+    if (last_pitch >= kDragEndingLimit && last_pitch <= 180.0) {
+ //     std::cout << "up drag angle hit : " << last_pitch << std::endl;
       for (auto snap : snapshot_array) {
-        if ( !((snap.yaw >= kDragOutOfRangeLimit && snap.yaw <= 180.0) ||
-              (snap.yaw >= 180 && snap.yaw < 360.0 - kDragOutOfRangeLimit))
+        if ( (snap.yaw >= kDragOutOfRangeLimit && snap.yaw <= 180.0) ||
+              (snap.yaw >= 180 && snap.yaw < 360.0 - kDragOutOfRangeLimit)
+        ) {
+          return false;
+        }
+      }
+      return true;
+    } else {
+      return false;
+    }
+}
+
+bool isUpDrag(
+    std::vector<moface::FaceObservationSnapShot> const& snapshot_array
+) {
+    double last_pitch = snapshot_array.back().pitch;
+    if (last_pitch >= 180.0 && last_pitch <= 360.0 - kDragEndingLimit) {
+//      std::cout << "down drag angle hit : " << last_pitch << std::endl;
+      for (auto snap : snapshot_array) {
+        if ((snap.yaw >= kDragOutOfRangeLimit && snap.yaw <= 180.0) ||
+            (snap.yaw >= 180 && snap.yaw < 360.0 - kDragOutOfRangeLimit)
         ) {
           return false;
         }
