@@ -53,6 +53,7 @@ namespace moface {
             void sendObservations(const ::mediapipe::NormalizedLandmarkList &landmarks, const ::mediapipe::face_geometry::FaceGeometry &geometry);
             std::string getFaceObservation();
             std::string curState();
+            void reset();
             void updateMediaFilePath(std::string &file_path);
         private:
             eventCallback event_callback_;

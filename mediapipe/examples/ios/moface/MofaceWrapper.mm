@@ -289,7 +289,9 @@ void geometryNotifier(double pitch, double yaw, double roll, double distance) {
 }
 
 - (NSString *)stop {
-    return [NSString stringWithCString:self.moface_calculator->getFaceObservation().c_str()];
+    NSString *ret_string = [NSString stringWithCString:self.moface_calculator->getFaceObservation().c_str()];
+    self.moface_calculator->reset();
+    return ret_string;
 }
 
 @end

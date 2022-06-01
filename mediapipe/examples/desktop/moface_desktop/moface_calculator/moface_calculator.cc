@@ -230,6 +230,15 @@ std::string MofaceCalculator::curState() {
     return state_to_string(cur_state_);
 }
 
+void MofaceCalculator::reset() {
+    prev_state_ = moface::eInit;
+     cur_state_ = moface::eInit;
+    face_observation_snapshot_array_.clear();
+    reference_landmark_.clear_landmark();
+    face_observation_object_ = NULL;
+    frame_id_ = 0;
+}
+
 void MofaceCalculator::updateMediaFilePath(std::string &file_path) {
     face_observation_object_->updateMediaFilePath(file_path);
 }
