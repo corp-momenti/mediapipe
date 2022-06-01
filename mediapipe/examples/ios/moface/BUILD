@@ -21,28 +21,47 @@ licenses(["notice"])
 
 MIN_IOS_VERSION = "11.0"
 
+genrule(
+    name = "PatchedMofaceFramework",
+    srcs = [":MofaceFramework"],
+    outs = [
+        "MofaceFramework.framework",
+        "MofaceFramework.framework.dSYM",
+    ],
+    output_to_bindir = 1,
+    tools = ["patch_ios_framework.sh"],
+    cmd = """
+        bash $(location patch_ios_framework.sh) "$(SRCS)" "$(OUTS)"
+    """
+)
+
 ios_framework(
     name = "MofaceFramework",
     hdrs = [
-        "MofaceFramework.h",
+        "MofaceWrapper.h",
+        "headers/MofaceFramework.h",
     ],
     infoplists = ["Info.plist"],
     bundle_id = "tv.momenti.MofaceEngine",
     families = ["iphone", "ipad"],
+    resources = [
+        "modulemap/module.modulemap"
+    ],
     minimum_os_version = MIN_IOS_VERSION,
+    visibility = ["//visibility:public"],
     deps = [
-        ":MediaPipeLibrary",
+        ":MofaceWrapper",
         "@ios_opencv//:OpencvFramework",
     ],
 )
 
 objc_library(
-    name = "MediaPipeLibrary",
+    name = "MofaceWrapper",
     srcs = [
-        "MofaceFramework.mm",
+        "MofaceWrapper.mm",
     ],
     hdrs = [
-        "MofaceFramework.h",
+        "MofaceWrapper.h",
     ],
     copts = ["-std=c++17"],
     data = [
@@ -62,6 +81,7 @@ objc_library(
     ],
     deps = [
         "//mediapipe/objc:mediapipe_framework_ios",
+        "//mediapipe/examples/desktop/moface_desktop:moface_calculator"
     ] + select({
         "//mediapipe:ios_i386": [],
         "//mediapipe:ios_x86_64": [],

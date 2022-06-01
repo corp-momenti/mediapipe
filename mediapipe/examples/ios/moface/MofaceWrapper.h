@@ -8,8 +8,8 @@ typedef NS_ENUM(NSUInteger, EventType) {
     LeftActionDetected,
     UpActionDetected,
     DownActionDetected,
-    eyesActionDetected,
-    mouthActionDetected,
+    EyesActionDetected,
+    MouthActionDetected,
     AngryActionDetected,
     HappyActionDetected,
     ReferenceDetected
@@ -26,7 +26,7 @@ typedef NS_ENUM(NSUInteger, WarningType) {
 typedef void(^EventCallback)(EventType event);
 typedef void(^WarningCallback)(WarningType warning);
 
-@interface MofaceFramework : NSObject
+@interface MofaceWrapper : NSObject
     - (instancetype)init NS_UNAVAILABLE;
     - (instancetype)initWithCallbacks:(EventCallback)eventCallback warningCallback:(WarningCallback)warningCallback;
     - (void)feed:(CVPixelBufferRef)imageBuffer;

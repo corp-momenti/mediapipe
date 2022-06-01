@@ -29,6 +29,12 @@ build:macos --cxxopt=-std=c++17
 build:macos --host_cxxopt=-std=c++17
 build:macos --copt=-w
 
+# iOS
+build:ios --apple_platform_type=ios
+build:ios --apple_bitcode=embedded
+build:ios --copt=-fembed-bitcode
+build:ios --cxxopt=-std=c++17 # enables c++ 17
+
 # Sets the default Apple platform to macOS.
 build --apple_platform_type=macos
 
@@ -83,6 +89,12 @@ build:ios_arm64e --watchos_cpus=armv7k
 build:ios_fat --config=ios
 build:ios_fat --ios_multi_cpus=armv7,arm64
 build:ios_fat --watchos_cpus=armv7k
+
+build:ios_simulator --config=ios
+build:ios_simulator --ios_multi_cpus=x86_64
+
+build:ios_device --config=ios
+build:ios_device --cpu=ios_arm64
 
 build:darwin_x86_64 --apple_platform_type=macos
 build:darwin_x86_64 --macos_minimum_os=10.12

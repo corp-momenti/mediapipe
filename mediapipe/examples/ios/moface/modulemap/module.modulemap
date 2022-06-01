@@ -1,0 +1,5 @@
+framework module MofaceFramework {
+  umbrella header "MofaceFramework.h"
+  export *
+  module * { export * }
+}
