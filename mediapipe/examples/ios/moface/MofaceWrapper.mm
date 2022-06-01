@@ -17,6 +17,7 @@
 static NSString* const kGraphName = @"moface_mobile_gpu";
 
 static const char* kInputStream = "input_video";
+static const char* kOutputStream = "output_video";
 
 static const char* kMultiFaceGeometryStream = "multi_face_geometry";
 static const char* kMultiFaceLandmark = "multi_smoothed_face_landmarks";
@@ -32,8 +33,8 @@ static WarningCallback warningCallback_;
 @property (nonatomic) MPPGraph* mediapipeGraph;
 @property (nonatomic) moface::MofaceCalculator* moface_calculator;
 
-// @property (nonatomic, copy) EventCallback eventCallback;
-// @property (nonatomic, copy) WarningCallback warningCallback;
+@property (nonatomic) std::vector<::mediapipe::NormalizedLandmarkList> multi_face_landmarks;
+@property (nonatomic) std::vector<::mediapipe::face_geometry::FaceGeometry> multi_face_geometry;
 
 @end
 
@@ -75,27 +76,10 @@ static WarningCallback warningCallback_;
 
     // Create MediaPipe graph with mediapipe::CalculatorGraphConfig proto object.
     MPPGraph* newGraph = [[MPPGraph alloc] initWithGraphConfig:config];
+    [newGraph addFrameOutputStream:kOutputStream outputPacketType:MPPPacketTypePixelBuffer];
     [newGraph addFrameOutputStream:kMultiFaceGeometryStream outputPacketType:MPPPacketTypeRaw];
     [newGraph addFrameOutputStream:kMultiFaceLandmark outputPacketType:MPPPacketTypeRaw];
     return newGraph;
-}
-
-- (instancetype)init
-{
-    self = [super init];
-    if (self) {
-
-        dispatch_queue_attr_t qosAttribute = dispatch_queue_attr_make_with_qos_class(
-             DISPATCH_QUEUE_SERIAL, QOS_CLASS_USER_INTERACTIVE, /*relative_priority=*/0);
-        _videoQueue = dispatch_queue_create(kVideoQueueLabel, qosAttribute);
-
-        self.mediapipeGraph = [[self class] loadGraphFromResource:kGraphName];
-        self.mediapipeGraph.delegate = self;
-        // Set maxFramesInFlight to a small value to avoid memory contention for real-time processing.
-        self.mediapipeGraph.maxFramesInFlight = 2;
-        [self startGraph];
-    }
-    return self;
 }
 
 void eventNotifier(moface::MoFaceEventType event) {
@@ -161,14 +145,11 @@ void geometryNotifier(double pitch, double yaw, double roll, double distance) {
 
 }
 
-- (instancetype)initWithCallbacks:(EventCallback)eventCallback warningCallback:(WarningCallback)warningCallback
+- (instancetype)init
 {
     self = [super init];
     if (self) {
-        // self.eventCallback = eventCallback;
-        // self.warningCallback = warningCallback;
-        eventCallback_ = eventCallback;
-        warningCallback_ = warningCallback;
+
         dispatch_queue_attr_t qosAttribute = dispatch_queue_attr_make_with_qos_class(
              DISPATCH_QUEUE_SERIAL, QOS_CLASS_USER_INTERACTIVE, /*relative_priority=*/0);
         _videoQueue = dispatch_queue_create(kVideoQueueLabel, qosAttribute);
@@ -176,14 +157,19 @@ void geometryNotifier(double pitch, double yaw, double roll, double distance) {
         self.mediapipeGraph = [[self class] loadGraphFromResource:kGraphName];
         self.mediapipeGraph.delegate = self;
         // Set maxFramesInFlight to a small value to avoid memory contention for real-time processing.
-        self.mediapipeGraph.maxFramesInFlight = 2;
-        self.moface_calculator = new moface::MofaceCalculator(
-            eventNotifier, warningNotifier, geometryNotifier
-        );
+        self.mediapipeGraph.maxFramesInFlight = 10;
         [self startGraph];
         NSLog(@"Initilaized MofaceFramework!!!");
     }
     return self;
+}
+
+- (void)setCallbacks:(EventCallback)eventCallback warningCallback:(WarningCallback)warningCallback {
+    eventCallback_ = eventCallback;
+    warningCallback_ = warningCallback;
+    self.moface_calculator = new moface::MofaceCalculator(
+        eventNotifier, warningNotifier, geometryNotifier
+    );
 }
 
 - (void)startGraph {
@@ -196,18 +182,16 @@ void geometryNotifier(double pitch, double yaw, double roll, double distance) {
 
 #pragma mark - MPPGraphDelegate methods
 
-// Receives CVPixelBufferRef from the MediaPipe graph. Invoked on a MediaPipe worker thread.
-// - (void)mediapipeGraph:(MPPGraph*)graph
-//   didOutputPixelBuffer:(CVPixelBufferRef)pixelBuffer
-//             fromStream:(const std::string&)streamName {
-//       if (streamName == kOutputStream) {
-//         // Display the captured image on the screen.
-//         CVPixelBufferRetain(pixelBuffer);
-//         dispatch_async(dispatch_get_main_queue(), ^{
-//           CVPixelBufferRelease(pixelBuffer);
-//         });
-//       }
-// }
+- (void)mediapipeGraph:(MPPGraph*)graph
+    didOutputPixelBuffer:(CVPixelBufferRef)pixelBuffer
+              fromStream:(const std::string&)streamName {
+  if (streamName == kOutputStream) {
+    // Display the captured image on the screen.
+    //CVPixelBufferRelease(pixelBuffer);
+    CVPixelBufferRetain(pixelBuffer);
+    CVPixelBufferRelease(pixelBuffer);
+  }
+}
 
 // Receives a raw packet from the MediaPipe graph. Invoked on a MediaPipe worker thread.
 //
@@ -217,14 +201,13 @@ void geometryNotifier(double pitch, double yaw, double roll, double distance) {
 - (void)mediapipeGraph:(MPPGraph*)graph
      didOutputPacket:(const ::mediapipe::Packet&)packet
           fromStream:(const std::string&)streamName {
-    std::vector<::mediapipe::NormalizedLandmarkList> multi_face_landmarks;
-    std::vector<::mediapipe::face_geometry::FaceGeometry> multi_face_geometry;
     if (streamName == kMultiFaceLandmark) {
         if (packet.IsEmpty()) {
           NSLog(@"[TS:%lld] No face landmarks", packet.Timestamp().Value());
           return;
         }
-        multi_face_landmarks = packet.Get<std::vector<::mediapipe::NormalizedLandmarkList>>();
+        _multi_face_landmarks.clear();
+        _multi_face_landmarks = packet.Get<std::vector<::mediapipe::NormalizedLandmarkList>>();
         // NSLog(@"[TS:%lld] Number of face instances with landmarks: %lu", packet.Timestamp().Value(),
         //       multi_face_landmarks.size());
         // for (int face_index = 0; face_index < multi_face_landmarks.size(); ++face_index) {
@@ -239,9 +222,10 @@ void geometryNotifier(double pitch, double yaw, double roll, double distance) {
     if (streamName == kMultiFaceGeometryStream) {
         if (packet.IsEmpty()) {
             NSLog(@"[TS:%lld] No face geometry", packet.Timestamp().Value());
-        return;
+            return;
         }
-        multi_face_geometry =
+        _multi_face_geometry.clear();
+        _multi_face_geometry =
             packet.Get<std::vector<::mediapipe::face_geometry::FaceGeometry>>();
 
         /*for (int faceIndex = 0; faceIndex < multiFaceGeometry.size(); ++faceIndex) {
@@ -282,15 +266,26 @@ void geometryNotifier(double pitch, double yaw, double roll, double distance) {
     //        }
         }*/
     }
-    self.moface_calculator->sendObservations(multi_face_landmarks[0], multi_face_geometry[0]);
+    if (_multi_face_geometry.size() != 0 && _multi_face_landmarks.size() != 0) {
+        self.moface_calculator->sendObservations(_multi_face_landmarks[0], _multi_face_geometry[0]);
+        _multi_face_landmarks.clear();
+        _multi_face_geometry.clear();
+    }
 }
 
 #pragma mark - MPPInputSourceDelegate methods
 
-- (void)feed:(CVPixelBufferRef)imageBuffer {
-    [self.mediapipeGraph sendPixelBuffer:imageBuffer
+- (void)feed:(CMSampleBufferRef)sampleBuffer {
+    CVPixelBufferRef imageBuffer = CMSampleBufferGetImageBuffer(sampleBuffer);
+    CMTime timestamp = CMSampleBufferGetPresentationTimeStamp(sampleBuffer);
+    mediapipe::Timestamp graphTimestamp(static_cast<mediapipe::TimestampBaseType>(
+        mediapipe::Timestamp::kTimestampUnitsPerSecond * CMTimeGetSeconds(timestamp)));
+    if (![self.mediapipeGraph sendPixelBuffer:imageBuffer
                               intoStream:kInputStream
-                              packetType:MPPPacketTypePixelBuffer];
+                              packetType:MPPPacketTypePixelBuffer
+                              timestamp:graphTimestamp]) {
+                                  std::cout << "send buffer error !!!" << std::endl;
+                              }
 }
 
 - (NSString *)stop {

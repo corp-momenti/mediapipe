@@ -2,6 +2,8 @@
 # Input image. (ImageFrame)
 input_stream: "input_video"
 
+output_stream: "output_video"
+
 # A list of geometry data for a single detected face. The size of this
 # collection is at most 1 because of the single-face use in this graph.
 # (std::vector<face_geometry::FaceGeometry>)
@@ -26,6 +28,16 @@ output_stream: "multi_smoothed_face_landmarks"
 # real-time mobile applications. It also eliminates unnecessarily computation,
 # e.g., the output produced by a node may get dropped downstream if the
 # subsequent nodes are still busy processing previous inputs.
+node {
+  calculator: "FlowLimiterCalculator"
+  input_stream: "input_video"
+  input_stream: "FINISHED:output_video"
+  input_stream_info: {
+    tag_index: "FINISHED"
+    back_edge: true
+  }
+  output_stream: "throttled_input_video"
+}
 
 # Generates an environment that describes the current virtual scene.
 node {
@@ -48,8 +60,9 @@ node {
 # Computes the face geometry for a single face.
 node {
   calculator: "MofaceSingleFaceGeometryFromLandmarksGpu"
-  input_stream: "IMAGE:input_video"
+  input_stream: "IMAGE:throttled_input_video"
   input_side_packet: "ENVIRONMENT:environment"
   output_stream: "MULTI_FACE_GEOMETRY:multi_face_geometry"
   output_stream: "multi_smoothed_face_landmarks"
+  output_stream: "output_video"
 }

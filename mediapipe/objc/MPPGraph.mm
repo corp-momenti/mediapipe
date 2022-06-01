@@ -233,16 +233,19 @@ if ([wrapper.delegate
 - (absl::Status)performStart {
   absl::Status status = _graph->Initialize(_config);
   if (!status.ok()) {
+    std::cout << status.message() << std::endl;
     return status;
   }
   for (const auto& service_packet : _servicePackets) {
     status = _graph->SetServicePacket(*service_packet.first, service_packet.second);
     if (!status.ok()) {
+      std::cout << status.message() << std::endl;
       return status;
     }
   }
   status = _graph->StartRun(_inputSidePackets, _streamHeaders);
   if (!status.ok()) {
+    std::cout << status.message() << std::endl;
     return status;
   }
   return status;
@@ -366,7 +369,10 @@ if ([wrapper.delegate
               timestamp:(const mediapipe::Timestamp&)timestamp
          allowOverwrite:(BOOL)allowOverwrite
                   error:(NSError**)error {
-  if (_maxFramesInFlight && _framesInFlight >= _maxFramesInFlight) return NO;
+  if (_maxFramesInFlight && _framesInFlight >= _maxFramesInFlight) {
+    std::cout << "full frames in flight : " << _framesInFlight << std::endl;
+    return NO;
+  }
   mediapipe::Packet packet = [self packetWithPixelBuffer:imageBuffer packetType:packetType];
   BOOL success;
   if (allowOverwrite) {

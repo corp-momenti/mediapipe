@@ -27,8 +27,8 @@ typedef void(^EventCallback)(EventType event);
 typedef void(^WarningCallback)(WarningType warning);
 
 @interface MofaceWrapper : NSObject
-    - (instancetype)init NS_UNAVAILABLE;
-    - (instancetype)initWithCallbacks:(EventCallback)eventCallback warningCallback:(WarningCallback)warningCallback;
-    - (void)feed:(CVPixelBufferRef)imageBuffer;
+    - (instancetype)init;
+    - (void)setCallbacks:(EventCallback)eventCallback warningCallback:(WarningCallback)warningCallback;
+    - (void)feed:(CMSampleBufferRef)sampleBuffer;
     - (NSString *)stop;
 @end

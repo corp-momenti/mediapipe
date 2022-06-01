@@ -55,6 +55,16 @@ void MofaceCalculator::sendObservations(
     const ::mediapipe::NormalizedLandmarkList &landmarks,
     const ::mediapipe::face_geometry::FaceGeometry &geometry
 ) {
+    if (landmarks.landmark_size() == 0) {
+      std::cout << "no landmarks data !!!" << std::endl;
+      frame_id_ ++;
+      return;
+    }
+    if (!geometry.has_pose_transform_matrix()) {
+      std::cout << "no pose transform matrix data !!!" << std::endl;
+      frame_id_ ++;
+      return;
+    }
     float pitch, yaw, roll, distance;
     pitch = asin(geometry.pose_transform_matrix().packed_data(6));
     if (cos(pitch) > 0.0001) {

@@ -73,6 +73,7 @@ mediapipe_simple_subgraph(
         "//mediapipe/calculators/util:landmarks_smoothing_calculator",
         "//mediapipe/modules/face_geometry:face_geometry_from_landmarks",
         "//mediapipe/modules/face_landmark:face_landmark_front_gpu",
+        "//mediapipe/graphs/face_mesh/subgraphs:face_renderer_gpu",
     ],
 )
 
