@@ -85,31 +85,40 @@ static WarningCallback warningCallback_;
 void eventNotifier(moface::MoFaceEventType event) {
   switch (event) {
     case moface::eRightActionDetected:
+        //std::cout << "RightActionDetected" << std::endl;
         eventCallback_(RightActionDetected);
     break;
     case moface::eLeftActionDetected:
+        //std::cout << "LeftActionDetected" << std::endl;
         eventCallback_(LeftActionDetected);
     break;
     case moface::eUpActionDetected:
+        //std::cout << "UpActionDetected" << std::endl;
         eventCallback_(UpActionDetected);
     break;
     case moface::eDownActionDetected:
+        //std::cout << "DownActionDetected" << std::endl;
         eventCallback_(DownActionDetected);
     break;
     case moface::eBlinkActionDetected:
+        //std::cout << "EyesActionDetected" << std::endl;
         eventCallback_(EyesActionDetected);
     break;
     case moface::eMouthActionDetected:
+        //std::cout << "MouthActionDetected" << std::endl;
         eventCallback_(MouthActionDetected);
     break;
     case moface::eAngryActionDetected:
+        //std::cout << "AngryActionDetected" << std::endl;
         eventCallback_(AngryActionDetected);
     break;
     case moface::eHappyActionDetected:
+        //std::cout << "HappyActionDetected" << std::endl;
         eventCallback_(HappyActionDetected);
     break;
     case moface::eReferenceDetected:
-      eventCallback_(ReferenceDetected);
+        //std::cout << "ReferenceDetected" << std::endl;
+        eventCallback_(ReferenceDetected);
     //   std::string tmp_file_name = std::string(kDetectedReferenceFramePath) + "/" + moface::generate_uuid_v4() + ".png";
     //   cv::imwrite(tmp_file_name, output_frame_mat);
     break;
@@ -119,12 +128,15 @@ void eventNotifier(moface::MoFaceEventType event) {
 void warningNotifier(moface::MoFaceWarningType event) {
     switch (event) {
         case moface::eTooFar:
+            //std::cout << "TooFar" << std::endl;
             warningCallback_(TooFar);
         break;
         case moface::eTooClose:
+            //std::cout << "TooClose" << std::endl;
             warningCallback_(TooClose);
         break;
         case moface::eGoodDistance:
+            //std::cout << "GoodDistance" << std::endl;
         break;
         case moface::eGoingBackward:
         break;
@@ -133,6 +145,7 @@ void warningNotifier(moface::MoFaceWarningType event) {
         case moface::eInvalidDragAction:
         break;
         case moface::eNoFace:
+            //std::cout << "NoFace" << std::endl;
             warningCallback_(NoFace);
         break;
         case moface::eTimeout:

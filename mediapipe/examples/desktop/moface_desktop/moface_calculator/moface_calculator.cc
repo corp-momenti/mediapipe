@@ -232,7 +232,7 @@ std::string MofaceCalculator::curState() {
 
 void MofaceCalculator::reset() {
     prev_state_ = moface::eInit;
-     cur_state_ = moface::eInit;
+    cur_state_ = moface::eInit;
     face_observation_snapshot_array_.clear();
     reference_landmark_.clear_landmark();
     face_observation_object_ = NULL;

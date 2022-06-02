@@ -1,4 +1,5 @@
 #include <cstdlib>
+#include <iostream>
 #include <vector>
 
 //Reference Frame Range
@@ -31,21 +32,21 @@ bool isReferenceFrame(
        (pitch >= 0.0 && pitch <= kReferencePitchMax)
   ) {
     pitch_in_range = true;
-    //LOG(INFO) << "Reference Frame Pitch Angle : " << pitch;
+    //std::cout << "Reference Frame Pitch Angle : " << pitch << std::endl;
   }
 
   if ( (yaw >= kReferenceYawMin && yaw <= 360.0) ||
        (yaw >= 0.0 && yaw <= kReferenceYawMax)
   ) {
     yaw_in_range = true;
-    //LOG(INFO) << "Reference Frame Yaw Angle : " << yaw;
+    //std::cout << "Reference Frame Yaw Angle : " << yaw << std::endl;
   }
 
   if ( (roll >= kReferenceRollMin && roll <= 360.0) ||
        (roll >= 0.0 && roll <= kReferenceRollMax)
   ) {
     roll_in_range = true;
-    //LOG(INFO) << "Reference Frame Roll Angle : " << roll;
+    //std::cout << "Reference Frame Roll Angle : " << roll << std::endl;
   }
 
   return pitch_in_range && yaw_in_range && roll_in_range;
