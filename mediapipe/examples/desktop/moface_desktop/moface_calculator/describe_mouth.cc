@@ -75,7 +75,7 @@ void addAngryActionToFaceObservation(
     //get the bounding box for mouth
     //width : 167 -> 393, height : 164 -> 18
     moface::ObservationAction *new_action =
-      new moface::ObservationAction("pinch",
+      new moface::ObservationAction("pinch", "angry",
         reference.landmark(kRigthEdgeForAngry).x(),
         reference.landmark(kUpperEdgeForAngry).y(),
         reference.landmark(kLeftEdgeForAngry).x() - reference.landmark(kRigthEdgeForAngry).x(),
@@ -170,7 +170,7 @@ void addHappyActionToFaceObservation(
     //get the bounding box for mouth
     //width : 216 -> 436, height : 216 -> 202
     moface::ObservationAction *new_action =
-      new moface::ObservationAction("spread",
+      new moface::ObservationAction("spread", "happy",
         reference.landmark(kRigthEdgeForHappy).x(),
         reference.landmark(kRigthEdgeForHappy).y(),
         reference.landmark(kRigthEdgeForHappy).x() - reference.landmark(kLeftEdgeForHappy).x(),

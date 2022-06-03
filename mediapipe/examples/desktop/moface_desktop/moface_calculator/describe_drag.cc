@@ -199,7 +199,25 @@ void addDragToFaceObservation(
         moface::ObservationObject *new_object = new moface::ObservationObject("face");
         face_observation->addObject(*new_object);
     }
-    moface::ObservationAction *new_action = new moface::ObservationAction("drag", 0.0, 0.0, 1080.0, 1920.0);
+    std::string desc;
+    switch (drag_face_type)
+    {
+      case eDragLeft:
+        desc = "drag-left";
+        break;
+      case eDragRight:
+        desc = "drag-right";
+        break;
+      case eDragUp:
+        desc = "drag-up";
+        break;
+      case eDragDown:
+        desc = "drag-down";
+        break;
+      default:
+        break;
+    }
+    moface::ObservationAction *new_action = new moface::ObservationAction("drag", desc, 0.0, 0.0, 1080.0, 1920.0);
     int delta_index = 0;
     for (auto snapshot : snapshot_array) {
       moface::ObservationFeed *new_feed = new moface::ObservationFeed(snapshot.frame_id / 30.0, snapshot.pitch, snapshot.yaw, snapshot.roll);

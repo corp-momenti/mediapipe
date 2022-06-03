@@ -134,8 +134,8 @@ namespace moface {
     class ObservationAction {
         public:
             ObservationAction(
-                std::string type, double x, double y, double width, double height
-            ) : _type(type), _roi(new ObservationRoi(x, y, width, height)) {}
+                std::string type, std::string desc, double x, double y, double width, double height
+            ) : _type(type), _desc(desc), _roi(new ObservationRoi(x, y, width, height)) {}
             ObservationAction& operator=(const ObservationAction& rhs) {
                 _type = rhs._type;
                 _roi = rhs._roi;
@@ -170,6 +170,7 @@ namespace moface {
             }
         private:
             std::string _type;
+            std::string _desc;
             ObservationRoi *_roi;
             std::vector<ObservationFeed> _feeds;
     };

@@ -101,6 +101,7 @@ void addBlinkToFaceObservation(
     moface::ObservationAction *left_eye_action =
       new moface::ObservationAction(
         "push",
+        "blink-left",
         (double)std::get<0>(left_eye_area),
         (double)std::get<1>(left_eye_area),
         (double)std::get<2>(left_eye_area),
@@ -125,6 +126,7 @@ void addBlinkToFaceObservation(
     moface::ObservationAction *right_eye_action =
       new moface::ObservationAction(
         "push",
+        "blink-right",
         (double)std::get<0>(right_eye_area),
         (double)std::get<1>(right_eye_area),
         (double)std::get<2>(right_eye_area),
