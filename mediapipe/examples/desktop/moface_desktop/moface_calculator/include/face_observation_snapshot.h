@@ -155,6 +155,12 @@ namespace moface {
                 #else
                 writer.String(_type.c_str(), static_cast<SizeType>(_type.length()));
                 #endif
+                writer.String("desc");
+                #if RAPIDJSON_HAS_STDSTRING
+                writer.String(_desc);
+                #else
+                writer.String(_desc.c_str(), static_cast<SizeType>(_desc.length()));
+                #endif
                 writer.String("roi");
                 _roi->serialize(writer);
                 writer.String("feeds");
