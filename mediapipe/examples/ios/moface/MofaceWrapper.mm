@@ -27,6 +27,7 @@ static const int kMatrixTranslationZIndex = 14;
 
 static EventCallback eventCallback_;
 static WarningCallback warningCallback_;
+static SignalCallback signalCallback_;
 
 @interface MofaceWrapper() <MPPGraphDelegate>
 
@@ -125,19 +126,35 @@ void eventNotifier(moface::MoFaceEventType event) {
   }
 }
 
+void signalNotifier(moface::MofaceDistanceStatus distance, moface::MofacePoseStatus pose, bool inFrame, cv::Point center) {
+  //show signals
+  DistanceStatus distanceStatus;
+  PoseStatus poseStatus;
+  switch (distance) {
+    case moface::eGoodDistance:
+        distanceStatus = GoodDistance;
+      break;
+    case moface::eTooFar:
+        distanceStatus = TooFar;
+      break;
+    case moface::eTooClose:
+        distanceStatus = TooClose;
+      break;
+  }
+  switch (pose) {
+    case moface::eHoldStill:
+        poseStatus = HoldStill;
+      break;
+    case moface::eMoving:
+        poseStatus = Moving;
+      break;
+  }
+  bool withinFrame = inFrame;
+  signalCallback_(distanceStatus, poseStatus, withinFrame, CGPointMake(center.x, center.y));
+}
+
 void warningNotifier(moface::MoFaceWarningType event) {
     switch (event) {
-        case moface::eTooFar:
-            //std::cout << "TooFar" << std::endl;
-            warningCallback_(TooFar);
-        break;
-        case moface::eTooClose:
-            //std::cout << "TooClose" << std::endl;
-            warningCallback_(TooClose);
-        break;
-        case moface::eGoodDistance:
-            //std::cout << "GoodDistance" << std::endl;
-        break;
         case moface::eGoingBackward:
         break;
         case moface::eTooSlow:
@@ -177,11 +194,12 @@ void geometryNotifier(double pitch, double yaw, double roll, double distance) {
     return self;
 }
 
-- (void)setCallbacks:(EventCallback)eventCallback warningCallback:(WarningCallback)warningCallback {
+- (void)setCallbacks:(EventCallback)eventCallback signalCallback:(SignalCallback)signalCallback warningCallback:(WarningCallback)warningCallback {
     eventCallback_ = eventCallback;
+    signalCallback_ = signalCallback;
     warningCallback_ = warningCallback;
     self.moface_calculator = new moface::MofaceCalculator(
-        eventNotifier, warningNotifier, geometryNotifier
+        eventNotifier, signalNotifier, warningNotifier, geometryNotifier
     );
 }
 
