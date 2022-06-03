@@ -2,6 +2,8 @@
 #include <iostream>
 #include <vector>
 
+#include "mediapipe/framework/formats/landmark.pb.h"
+
 //Reference Frame Range
 constexpr double kReferencePitchMin = 357.0;
 constexpr double kReferencePitchMax = 3.0;
@@ -21,6 +23,17 @@ constexpr double kReferenceRangeRollMax = 5.0;
 //Distance Range
 constexpr double kMaxDistanceLimit = 40.0;
 constexpr double kMinDistanceLimit = 30.0;
+
+//Frame Range
+constexpr double kMinFrameInX = 0.0;
+constexpr double kMaxFrameInX = 1080.0;
+constexpr double kMinFrameInY = 420.0;
+constexpr double kMaxFrameInY = 1500.0;
+
+constexpr int kHightLandmark = 0;
+constexpr int kLowestLandmark = 0;
+constexpr int kRightMostLandmark = 0;
+constexpr int kLeftMostLandmark = 0;
 
 bool isReferenceFrame(
   double pitch,
@@ -98,4 +111,19 @@ bool isTooClose(
     return true;
   }
   return false;
+}
+
+bool isWithinFrame(
+  ::mediapipe::NormalizedLandmarkList const& landmarks
+) {
+  //todo
+  return true;
+  /*if (kMinFrameInY < landmarks.landmark(kHightLandmark).y() &&
+      kMaxFrameInY > landmarks.landmark(kLowestLandmark).y() &&
+      kMinFrameInX < landmarks.landmark(kRightMostLandmark).x() &&
+      kMaxFrameInX > landmarks.landmark(kLeftMostLandmark).x()
+  ) {
+    return true;
+  }
+  return false;*/
 }

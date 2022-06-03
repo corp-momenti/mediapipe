@@ -46,7 +46,7 @@ ABSL_FLAG(std::string, output_video_path, "",
 
 void showDebugInfo(
   std::string pitch, std::string yaw, std::string roll, std::string dist,
-  std::string state, std::string notification,
+  std::string state,
   cv::Point2f nose,
   cv::Mat output_frame_mat
 ) {
@@ -89,17 +89,8 @@ void showDebugInfo(
     );
     cv::putText(
       output_frame_mat,
-      notification,
-      cv::Point(text_left_align_pos, 100),
-      cv::FONT_HERSHEY_DUPLEX,
-      0.5,
-      CV_RGB(255, 0, 0),
-      2
-    );
-    cv::putText(
-      output_frame_mat,
       state,
-      cv::Point(text_left_align_pos, 120),
+      cv::Point(text_left_align_pos, 100),
       cv::FONT_HERSHEY_DUPLEX,
       0.5,
       CV_RGB(255, 0, 0),
@@ -107,11 +98,138 @@ void showDebugInfo(
     );
 }
 
+void showDebugInfo2(
+  std::string distance, std::string pose, std::string in_frame, std::string state,
+  std::string left_drag, std::string right_drag, std::string up_drag, std::string down_drag,
+  std::string blink, std::string angry, std::string happy,
+  cv::Mat output_frame_mat
+) {
+  //signals & state
+  int text_left_align_pos = output_frame_mat.cols / 2;
+  int actions_left_align_pos = 10;
+  cv::putText(
+    output_frame_mat,
+    distance,
+    cv::Point(text_left_align_pos, 20), //cv::Point(10, output_frame_mat.rows / 2), //top-left position
+    cv::FONT_HERSHEY_DUPLEX,
+    0.5,
+    CV_RGB(255, 0, 0),
+    2
+  );
+  cv::putText(
+    output_frame_mat,
+    pose,
+    cv::Point(text_left_align_pos, 40),
+    cv::FONT_HERSHEY_DUPLEX,
+    0.5,
+    CV_RGB(0, 255, 0),
+    2
+  );
+  cv::putText(
+    output_frame_mat,
+    in_frame,
+    cv::Point(text_left_align_pos, 60),
+    cv::FONT_HERSHEY_DUPLEX,
+    0.5,
+    CV_RGB(0, 0, 255),
+    2
+  );
+  cv::putText(
+    output_frame_mat,
+    state,
+    cv::Point(text_left_align_pos, 80),
+    cv::FONT_HERSHEY_DUPLEX,
+    0.5,
+    CV_RGB(255, 0, 0),
+    2
+  );
+
+  //actions
+  cv::putText(
+    output_frame_mat,
+    left_drag,
+    cv::Point(actions_left_align_pos, 10),
+    cv::FONT_HERSHEY_DUPLEX,
+    0.5,
+    CV_RGB(255, 0, 0),
+    2
+  );
+  cv::putText(
+    output_frame_mat,
+    right_drag,
+    cv::Point(actions_left_align_pos, 30),
+    cv::FONT_HERSHEY_DUPLEX,
+    0.5,
+    CV_RGB(255, 0, 0),
+    2
+  );
+  cv::putText(
+    output_frame_mat,
+    up_drag,
+    cv::Point(actions_left_align_pos, 50),
+    cv::FONT_HERSHEY_DUPLEX,
+    0.5,
+    CV_RGB(255, 0, 0),
+    2
+  );
+  cv::putText(
+    output_frame_mat,
+    down_drag,
+    cv::Point(actions_left_align_pos, 70),
+    cv::FONT_HERSHEY_DUPLEX,
+    0.5,
+    CV_RGB(255, 0, 0),
+    2
+  );
+  cv::putText(
+    output_frame_mat,
+    blink,
+    cv::Point(actions_left_align_pos, 90),
+    cv::FONT_HERSHEY_DUPLEX,
+    0.5,
+    CV_RGB(255, 0, 0),
+    2
+  );
+  cv::putText(
+    output_frame_mat,
+    angry,
+    cv::Point(actions_left_align_pos, 110),
+    cv::FONT_HERSHEY_DUPLEX,
+    0.5,
+    CV_RGB(255, 0, 0),
+    2
+  );
+  cv::putText(
+    output_frame_mat,
+    happy,
+    cv::Point(actions_left_align_pos, 130),
+    cv::FONT_HERSHEY_DUPLEX,
+    0.5,
+    CV_RGB(255, 0, 0),
+    2
+  );
+}
+
 //Objects for displaying
 cv::Mat output_frame_mat;
 cv::Point2f nose_point;
-std::string pitch_text, roll_text, yaw_text, distance_text,
-  state_text = "init", notification_text = "";
+std::string pitch_text, roll_text, yaw_text, distance_text;
+std::string distance_status_text, pose_status_text, within_frame_text;
+std::string state_text = "init";
+std::string left_drag_count_text = "LD : ";
+int left_drag_count = 0;
+std::string right_drag_count_text = "RD : ";
+int right_drag_count = 0;
+std::string up_drag_count_text = "UD : ";
+int up_drag_count = 0;
+std::string down_drag_count_text = "DD : ";
+int down_drag_count = 0;
+std::string blink_count_text = "BLK : ";
+int blink_count = 0;
+std::string happy_count_text = "HPY : ";
+int happy_count = 0;
+std::string angry_count_text = "ANG : ";
+int angry_count = 0;
 
 bool left_drag_captured = false;
 bool right_drag_captured = false;
@@ -122,61 +240,55 @@ bool angry_captured = false;
 bool happy_captured = false;
 
 void eventNotifier(moface::MoFaceEventType event) {
-  std::string event_text;
   switch (event) {
     case moface::eRightActionDetected:
-      event_text = "Right Drag Action Detected";
+      right_drag_count ++;
+      right_drag_count_text = "RD : " + std::to_string(right_drag_count);
       right_drag_captured = true;
     break;
     case moface::eLeftActionDetected:
-      event_text = "Left Drag Action Detected";
+      left_drag_count ++;
+      left_drag_count_text = "LD : " + std::to_string(left_drag_count);
       left_drag_captured = true;
     break;
     case moface::eUpActionDetected:
-      event_text = "Up Drag Action Detected";
+      up_drag_count ++;
+      up_drag_count_text = "UD : " + std::to_string(up_drag_count);
       up_drag_captured = true;
     break;
     case moface::eDownActionDetected:
-      event_text = "Down Drag Action Detected";
+      down_drag_count ++;
+      down_drag_count_text = "DD : " + std::to_string(down_drag_count);
       down_drag_captured = true;
     break;
     case moface::eBlinkActionDetected:
-      event_text = "Blink Drag Action Detected";
+      blink_count ++;
+      blink_count_text = "BLK : " + std::to_string(blink_count);
       blink_captured = true;
     break;
     case moface::eMouthActionDetected:
-      event_text = "Mouth Drag Action Detected";
     break;
     case moface::eAngryActionDetected:
-      event_text = "Anggry Drag Action Detected";
+      angry_count ++;
+      angry_count_text = "ANG : " + std::to_string(angry_count);
       angry_captured = true;
     break;
     case moface::eHappyActionDetected:
-      event_text = "Happy Drag Action Detected";
+      happy_count ++;
+      happy_count_text = "HPY : " + std::to_string(happy_count);
       happy_captured = true;
     break;
     case moface::eReferenceDetected:
-      event_text = "Reference Captured";
       std::string tmp_file_name = std::string(kDetectedReferenceFramePath) + "/" + moface::generate_uuid_v4() + ".png";
       cv::imwrite(tmp_file_name, output_frame_mat);
     break;
   }
-  notification_text = event_text;
 }
 
 void warningNotifier(moface::MoFaceWarningType event) {
   //showNotification
-    std::string event_text;
+  std::string event_text;
   switch (event) {
-    case moface::eTooFar:
-      event_text = "Face Too Far";
-    break;
-    case moface::eTooClose:
-      event_text = "Fase Too Close";
-    break;
-    case moface::eGoodDistance:
-      event_text = "Good Distance";
-    break;
     case moface::eGoingBackward:
       event_text = "Face Going Backward";
     break;
@@ -193,7 +305,30 @@ void warningNotifier(moface::MoFaceWarningType event) {
       event_text = "Timeout";
     break;
   }
-  notification_text = event_text;
+}
+
+void signalNotifier(moface::MofaceDistanceStatus distance, moface::MofacePoseStatus pose, bool inFrame, cv::Point center) {
+  //show signals
+  switch (distance) {
+    case moface::eGoodDistance:
+      distance_status_text = "Good Distance";
+      break;
+    case moface::eTooFar:
+      distance_status_text = "TooFar";
+      break;
+    case moface::eTooClose:
+      distance_status_text = "TooClose";
+      break;
+  }
+  switch (pose) {
+    case moface::eHoldStill:
+      pose_status_text = "Hold Still";
+      break;
+    case moface::eMoving:
+      pose_status_text = "Moving";
+      break;
+  }
+  within_frame_text = inFrame ? "Within Frame" : "Not Within Frame";
 }
 
 void geometryNotifier(double pitch, double yaw, double roll, double distance) {
@@ -206,7 +341,7 @@ void geometryNotifier(double pitch, double yaw, double roll, double distance) {
 absl::Status RunMPPGraph() {
 
   moface::MofaceCalculator *moface_calculator = new moface::MofaceCalculator(
-    eventNotifier, warningNotifier, geometryNotifier
+    eventNotifier, signalNotifier, warningNotifier, geometryNotifier
   );
 
   std::string calculator_graph_config_contents;
@@ -346,11 +481,17 @@ absl::Status RunMPPGraph() {
     }
     writer.write(output_frame_mat);
     state_text = moface_calculator->curState();
-    showDebugInfo(
-      pitch_text, yaw_text, roll_text, distance_text,
-      state_text, notification_text, nose_point,
+    showDebugInfo2(
+      distance_status_text, pose_status_text, within_frame_text, state_text,
+      left_drag_count_text, right_drag_count_text, up_drag_count_text, down_drag_count_text,
+      blink_count_text, angry_count_text, happy_count_text,
       output_frame_mat
     );
+    // showDebugInfo(
+    //   pitch_text, yaw_text, roll_text, distance_text,
+    //   state_text, notification_text, nose_point,
+    //   output_frame_mat
+    // );
     cv::imshow(kWindowName, output_frame_mat);
     // Press any key to exit.
     const int pressed_key = cv::waitKey(5);

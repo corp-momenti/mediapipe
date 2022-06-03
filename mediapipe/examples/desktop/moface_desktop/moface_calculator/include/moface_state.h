@@ -9,7 +9,6 @@ namespace moface {
         eStart,
         eReady,
         eDragTracking,
-        eDragAnalyzing,
         eNop
     };
 }

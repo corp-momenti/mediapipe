@@ -19,6 +19,10 @@
 #include "describe_eyes.h"
 #include "describe_mouth.h"
 #include "describe_reference.h"
+#include <cassert>
+// Use (void) to silence unused warnings.
+#define assertm(exp, msg) assert(((void)msg, exp))
+
 
 using namespace moface;
 
@@ -38,9 +42,6 @@ std::string state_to_string(MoFaceState const& in_code) {
             break;
         case eDragTracking:
             ret_string = "drag-tracking";
-            break;
-        case eDragAnalyzing:
-            ret_string = "drag-analyzing";
             break;
         case eNop:
             ret_string = "nop";
@@ -81,17 +82,36 @@ void MofaceCalculator::sendObservations(
     if (geometry_callback_) {
         geometry_callback_(pitch, yaw, roll, distance);
     }
+
+    //check distance
+    MofaceDistanceStatus distance_status;
     if (isTooFar(distance)) {
-      warning_callback_(eTooFar);
-      frame_id_ ++;
-      return;
+      distance_status = eTooFar;
+    } else if (isTooClose(distance)) {
+      distance_status = eTooClose;
+    } else {
+      distance_status = eGoodDistance;
     }
-    if (isTooClose(distance)) {
-      warning_callback_(eTooClose);
-      frame_id_ ++;
-      return;
+    //check pose
+    MofacePoseStatus pose_status;
+    if (isWithinReferenceRange(pitch, yaw, roll)) {
+      pose_status = eHoldStill;
+    } else {
+      pose_status = eMoving;
     }
-    warning_callback_(eGoodDistance);
+    //check if it's in the frame
+    bool withinFrame = false;
+    if (isWithinFrame(landmarks)) {
+      withinFrame = true;
+    }
+
+    signal_callback_(
+      distance_status,
+      pose_status,
+      withinFrame,
+      cv::Point(landmarks.landmark(0).x(), landmarks.landmark(0).y())
+    );
+
     switch (cur_state_) {
       case moface::eInit:
         prev_state_ = cur_state_;
@@ -106,20 +126,13 @@ void MofaceCalculator::sendObservations(
         }
         break;
       case moface::eReady:
-        if (!isWithinReferenceRange(pitch, yaw, roll)) {
-          moface::FaceObservationSnapShot new_snapshot = {
-            .timestamp = frame_id_ / 30.0, //geometry_packet.Timestamp().Seconds(),
-            .frame_id = frame_id_,
-            .pitch = pitch,
-            .roll = roll,
-            .yaw = yaw
-          };
-          new_snapshot.landmarks = landmarks;
-          //copy(multi_face_landmarks.begin(), multi_face_landmarks.end(), back_inserter(new_snapshot.landmarks));
-          face_observation_snapshot_array_.push_back(new_snapshot);
+        if (distance_status != eGoodDistance) {
           prev_state_ = cur_state_;
-          cur_state_ = moface::eDragTracking;
-        } else {
+          cur_state_ = moface::eNop;
+        } else if (!withinFrame) {
+          prev_state_ = cur_state_;
+          cur_state_ = moface::eNop;
+        } else if (pose_status == eHoldStill) {
           if (face_observation_snapshot_array_.size() > kNumberOfObservationsForCheckingActions) {
             if (checkBlinkActionAndAddToFaceObservation(reference_landmark_, face_observation_snapshot_array_, face_observation_object_)) {
               event_callback_(eBlinkActionDetected);
@@ -143,26 +156,7 @@ void MofaceCalculator::sendObservations(
             //copy(multi_face_landmarks.begin(), multi_face_landmarks.end(), back_inserter(new_snapshot.landmarks));
             face_observation_snapshot_array_.push_back(new_snapshot);
           }
-        }
-        break;
-      case moface::eDragTracking:
-        if (isWithinReferenceRange(pitch, yaw, roll)) {
-          prev_state_ = cur_state_;
-          cur_state_ = moface::eReady;
-          face_observation_snapshot_array_.clear();
-        } else if (hitDragLimit(pitch, yaw, roll)) {
-          moface::FaceObservationSnapShot new_snapshot = {
-            .timestamp = frame_id_ / 30.0, //geometry_packet.Timestamp().Seconds(),
-            .frame_id = frame_id_,
-            .pitch = pitch,
-            .roll = roll,
-            .yaw = yaw
-          };
-          new_snapshot.landmarks = landmarks;
-          face_observation_snapshot_array_.push_back(new_snapshot);
-          prev_state_ = cur_state_;
-          cur_state_ = moface::eDragAnalyzing;
-        } else {
+        } else if (pose_status == eMoving) {
           moface::FaceObservationSnapShot new_snapshot = {
             .timestamp = frame_id_ / 30.0, //geometry_packet.Timestamp().Seconds(),
             .frame_id = frame_id_,
@@ -173,47 +167,94 @@ void MofaceCalculator::sendObservations(
           new_snapshot.landmarks = landmarks;
           //copy(multi_face_landmarks.begin(), multi_face_landmarks.end(), back_inserter(new_snapshot.landmarks));
           face_observation_snapshot_array_.push_back(new_snapshot);
-          if (dragGoingBackward(face_observation_snapshot_array_)) {
-            warning_callback_(moface::eGoingBackward);
-          }
-          if (dragTooSlow(face_observation_snapshot_array_)) {
-            warning_callback_(moface::eTooSlow);
-          }
+          prev_state_ = cur_state_;
+          cur_state_ = moface::eDragTracking;
+        } else {
+          assertm(false, "invalid case in ready state");
         }
         break;
-      case moface::eDragAnalyzing:
-        if (hasValidDrag(face_observation_snapshot_array_)) {
-          if (isLeftDrag(face_observation_snapshot_array_)) {
-              addDragToFaceObservation(reference_landmark_, face_observation_snapshot_array_, face_observation_object_, eDragLeft);
-              event_callback_(moface::eLeftActionDetected);
-          } else if (isRightDrag(face_observation_snapshot_array_)) {
-              addDragToFaceObservation(reference_landmark_, face_observation_snapshot_array_, face_observation_object_, eDragRight);
-              event_callback_(moface::eRightActionDetected);
-          } else if (isUpDrag(face_observation_snapshot_array_)) {
-              addDragToFaceObservation(reference_landmark_, face_observation_snapshot_array_, face_observation_object_, eDragUp);
-              event_callback_(moface::eUpActionDetected);
-          } else if (isDownDrag(face_observation_snapshot_array_)) {
-              addDragToFaceObservation(reference_landmark_, face_observation_snapshot_array_, face_observation_object_, eDragDown);
-              event_callback_(moface::eDownActionDetected);
+      case moface::eDragTracking:
+        if (distance_status != eGoodDistance) {
+          prev_state_ = cur_state_;
+          cur_state_ = moface::eNop;
+        } else if (!withinFrame) {
+          prev_state_ = cur_state_;
+          cur_state_ = moface::eNop;
+        } else if (pose_status == eHoldStill) {
+          prev_state_ = cur_state_;
+          cur_state_ = moface::eReady;
+          face_observation_snapshot_array_.clear();
+        } else if (pose_status == eMoving) {
+          if (hitDragLimit(pitch, yaw, roll)) {
+            moface::FaceObservationSnapShot new_snapshot = {
+              .timestamp = frame_id_ / 30.0, //geometry_packet.Timestamp().Seconds(),
+              .frame_id = frame_id_,
+              .pitch = pitch,
+              .roll = roll,
+              .yaw = yaw
+            };
+            new_snapshot.landmarks = landmarks;
+            face_observation_snapshot_array_.push_back(new_snapshot);
+            if (hasValidDrag(face_observation_snapshot_array_)) {
+              if (isLeftDrag(face_observation_snapshot_array_)) {
+                  addDragToFaceObservation(reference_landmark_, face_observation_snapshot_array_, face_observation_object_, eDragLeft);
+                  event_callback_(moface::eLeftActionDetected);
+              } else if (isRightDrag(face_observation_snapshot_array_)) {
+                  addDragToFaceObservation(reference_landmark_, face_observation_snapshot_array_, face_observation_object_, eDragRight);
+                  event_callback_(moface::eRightActionDetected);
+              } else if (isUpDrag(face_observation_snapshot_array_)) {
+                  addDragToFaceObservation(reference_landmark_, face_observation_snapshot_array_, face_observation_object_, eDragUp);
+                  event_callback_(moface::eUpActionDetected);
+              } else if (isDownDrag(face_observation_snapshot_array_)) {
+                  addDragToFaceObservation(reference_landmark_, face_observation_snapshot_array_, face_observation_object_, eDragDown);
+                  event_callback_(moface::eDownActionDetected);
+              } else {
+                  std::cout << "Invald Drag Cases!!!!";
+              }
+            } else {
+              warning_callback_(moface::eInvalidDragAction);
+            }
+            face_observation_snapshot_array_.clear();
+            prev_state_ = cur_state_;
+            cur_state_ = moface::eNop;
           } else {
-              std::cout << "Invald Drag Cases!!!!";
+            moface::FaceObservationSnapShot new_snapshot = {
+              .timestamp = frame_id_ / 30.0, //geometry_packet.Timestamp().Seconds(),
+              .frame_id = frame_id_,
+              .pitch = pitch,
+              .roll = roll,
+              .yaw = yaw
+            };
+            new_snapshot.landmarks = landmarks;
+            //copy(multi_face_landmarks.begin(), multi_face_landmarks.end(), back_inserter(new_snapshot.landmarks));
+            face_observation_snapshot_array_.push_back(new_snapshot);
+            //todo
+            /*
+            if (dragGoingBackward(face_observation_snapshot_array_)) {
+              warning_callback_(moface::eGoingBackward);
+            }
+            if (dragTooSlow(face_observation_snapshot_array_)) {
+              warning_callback_(moface::eTooSlow);
+            }
+            */
           }
         } else {
-          warning_callback_(moface::eInvalidDragAction);
+          assertm(false, "invalid case in tracking state");
         }
-        face_observation_snapshot_array_.clear();
-        prev_state_ = cur_state_;
-        cur_state_ = moface::eNop;
         break;
       case moface::eNop:
-        if (isWithinReferenceRange(pitch, yaw, roll)) {
+        if (
+          distance_status == eGoodDistance &&
+          pose_status == eHoldStill &&
+          withinFrame
+        ) {
           prev_state_ = cur_state_;
           cur_state_ = moface::eReady;
           face_observation_snapshot_array_.clear();
         }
         break;
       default:
-        std::cout << "Not a vaild state!!!";
+        assertm(false, "not a valid state");
         break;
     }
     frame_id_ ++;
