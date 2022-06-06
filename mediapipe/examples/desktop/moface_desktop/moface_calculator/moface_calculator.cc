@@ -52,6 +52,13 @@ std::string state_to_string(MoFaceState const& in_code) {
     return ret_string;
 }
 
+void MofaceCalculator::setResolution(
+  double width, double height
+) {
+  width_ = width;
+  height_ = height;
+}
+
 void MofaceCalculator::sendObservations(
     const ::mediapipe::NormalizedLandmarkList &landmarks,
     const ::mediapipe::face_geometry::FaceGeometry &geometry
@@ -101,7 +108,7 @@ void MofaceCalculator::sendObservations(
     }
     //check if it's in the frame
     bool withinFrame = false;
-    if (isWithinFrame(landmarks)) {
+    if (isWithinFrame(width_, height_, landmarks)) {
       withinFrame = true;
     }
 

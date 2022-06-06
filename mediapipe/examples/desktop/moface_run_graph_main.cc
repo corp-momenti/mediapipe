@@ -343,6 +343,7 @@ absl::Status RunMPPGraph() {
   moface::MofaceCalculator *moface_calculator = new moface::MofaceCalculator(
     eventNotifier, signalNotifier, warningNotifier, geometryNotifier
   );
+  moface_calculator->setResolution(640.0, 480.0);
 
   std::string calculator_graph_config_contents;
 

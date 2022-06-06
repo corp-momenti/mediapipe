@@ -7,21 +7,21 @@
 #include "mediapipe/modules/face_geometry/protos/face_geometry.pb.h"
 #include "include/face_observation_snapshot.h"
 
-std::tuple<int, int> getLeftEyeCenter(
+std::tuple<double, double> getLeftEyeCenter(
   ::mediapipe::NormalizedLandmarkList const& referenece
 );
 
-std::tuple<int, int, int, int> getLeftEyeArea(
+std::tuple<double, double, double, double> getLeftEyeArea(
   ::mediapipe::NormalizedLandmarkList const& referenece
 );
 
 double calculateLeftEAR(const ::mediapipe::NormalizedLandmarkList &landmarks);
 
-std::tuple<int, int> getRightEyeCenter(
+std::tuple<double, double> getRightEyeCenter(
   ::mediapipe::NormalizedLandmarkList const& referenece
 );
 
-std::tuple<int, int, int, int> getRightEyeArea(
+std::tuple<double, double, double, double> getRightEyeArea(
   ::mediapipe::NormalizedLandmarkList const& referenece
 );
 

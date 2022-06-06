@@ -33,24 +33,24 @@ constexpr int kRightEyeHorzLeftEdge = 133;
 constexpr double kEarThreshold = 0.35;
 
 
-std::tuple<int, int> getLeftEyeCenter(
+std::tuple<double, double> getLeftEyeCenter(
   ::mediapipe::NormalizedLandmarkList const& reference
 ) {
-  int x = (reference.landmark(kLeftEyeLeftEdge).x() + reference.landmark(kLeftEyeRightEdge).x()) * 0.5;
-  int y = (reference.landmark(kLeftEyeDownEdge).y() + reference.landmark(kLeftEyeUpEdge).y()) * 0.5;
-  return std::tuple<int, int>(x, y);
+  double x = (reference.landmark(kLeftEyeLeftEdge).x() + reference.landmark(kLeftEyeRightEdge).x()) * 0.5;
+  double y = (reference.landmark(kLeftEyeDownEdge).y() + reference.landmark(kLeftEyeUpEdge).y()) * 0.5;
+  return std::tuple<double, double>(x, y);
 }
 
 // in : landmarks from midiapipe
 // out : (x, y, width, height)
-std::tuple<int, int, int, int> getLeftEyeArea(
+std::tuple<double, double, double, double> getLeftEyeArea(
   ::mediapipe::NormalizedLandmarkList const& reference
 ) {
-  int x = reference.landmark(kLeftEyeRightEdge).x();
-  int y = reference.landmark(kLeftEyeUpEdge).y();
-  int width = reference.landmark(kLeftEyeLeftEdge).x() - x;
-  int height = reference.landmark(kLeftEyeDownEdge).y() - y;
-  return std::tuple<int, int, int, int>(x, y, width, height);
+  double x = reference.landmark(kLeftEyeRightEdge).x();
+  double y = reference.landmark(kLeftEyeUpEdge).y();
+  double width = reference.landmark(kLeftEyeLeftEdge).x() - x;
+  double height = reference.landmark(kLeftEyeDownEdge).y() - y;
+  return std::tuple<double, double, double, double>(x, y, width, height);
 }
 
 double calculateLeftEAR(const ::mediapipe::NormalizedLandmarkList &landmarks) {
@@ -60,24 +60,24 @@ double calculateLeftEAR(const ::mediapipe::NormalizedLandmarkList &landmarks) {
   return (vertical_size_1 + vertical_size_2) / (2 * horiozontal_size);
 }
 
-std::tuple<int, int> getRightEyeCenter(
+std::tuple<double, double> getRightEyeCenter(
   ::mediapipe::NormalizedLandmarkList const& reference
 ) {
-  int x = (reference.landmark(kRightEyeLeftEdge).x() + reference.landmark(kRightEyeRightEdge).x()) * 0.5;
-  int y = (reference.landmark(kRightEyeDownEdge).y() + reference.landmark(kRightEyeUpEdge).y()) * 0.5;
-  return std::tuple<int, int>(x, y);
+  double x = (reference.landmark(kRightEyeLeftEdge).x() + reference.landmark(kRightEyeRightEdge).x()) * 0.5;
+  double y = (reference.landmark(kRightEyeDownEdge).y() + reference.landmark(kRightEyeUpEdge).y()) * 0.5;
+  return std::tuple<double, double>(x, y);
 }
 
 // in : landmarks from midiapipe
 // out : (x, y, width, height)
-std::tuple<int, int, int, int> getRightEyeArea(
+std::tuple<double, double, double, double> getRightEyeArea(
   ::mediapipe::NormalizedLandmarkList const& reference
 ) {
   int x = reference.landmark(kRightEyeRightEdge).x();
   int y = reference.landmark(kRightEyeUpEdge).y();
-  int width = reference.landmark(kRightEyeLeftEdge).x() - x;
-  int height = reference.landmark(kRightEyeDownEdge).y() - y;
-  return std::tuple<int, int, int, int>(x, y, width, height);
+  double width = reference.landmark(kRightEyeLeftEdge).x() - x;
+  double height = reference.landmark(kRightEyeDownEdge).y() - y;
+  return std::tuple<double, double, double, double>(x, y, width, height);
 }
 
 double calculateRightEAR(const ::mediapipe::NormalizedLandmarkList &landmarks) {
@@ -97,7 +97,7 @@ void addBlinkToFaceObservation(
     moface::ObservationObject *new_object = new moface::ObservationObject("face");
     face_observation->addObject(*new_object);
     }
-    std::tuple<int, int, int, int> left_eye_area = getLeftEyeArea(reference);
+    std::tuple<double, double, double, double> left_eye_area = getLeftEyeArea(reference);
     moface::ObservationAction *left_eye_action =
       new moface::ObservationAction(
         "push",
@@ -107,7 +107,7 @@ void addBlinkToFaceObservation(
         (double)std::get<2>(left_eye_area),
         (double)std::get<3>(left_eye_area)
       );
-    std::tuple<int, int> left_eye_center = getLeftEyeCenter(reference);
+    std::tuple<double, double> left_eye_center = getLeftEyeCenter(reference);
     for (auto snapshot : snapshot_array) {
       moface::ObservationFeed *new_feed =
         new moface::ObservationFeed(
@@ -122,7 +122,7 @@ void addBlinkToFaceObservation(
     }
     face_observation->lastObject().addAction(*left_eye_action);
 
-    std::tuple<int, int, int, int> right_eye_area = getRightEyeArea(reference);
+    std::tuple<double, double, double, double> right_eye_area = getRightEyeArea(reference);
     moface::ObservationAction *right_eye_action =
       new moface::ObservationAction(
         "push",
@@ -132,7 +132,7 @@ void addBlinkToFaceObservation(
         (double)std::get<2>(right_eye_area),
         (double)std::get<3>(right_eye_area)
       );
-    std::tuple<int, int> right_eye_center = getRightEyeCenter(reference);
+    std::tuple<double, double> right_eye_center = getRightEyeCenter(reference);
     for (auto snapshot : snapshot_array) {
       moface::ObservationFeed *new_feed =
         new moface::ObservationFeed(
@@ -160,13 +160,14 @@ bool checkBlinkActionAndAddToFaceObservation(
     double ear = (calculateLeftEAR(snapshot_array[i].landmarks) + calculateRightEAR(snapshot_array[i].landmarks)) * 0.5;
     ear_history.push_back(ear);
     if (ear < kEarThreshold && i > 10) {
-      slices.push_back(std::make_tuple(i, i - 10));
-      for (int j = i - 1; j >= 0; j --) {
-        if (ear_history[j] > reference_ear) {
-          slices.push_back(std::make_tuple(i, j));
-          break;
-        }
-      }
+      slices.push_back(std::make_tuple(i - 10, i));
+      //todo
+      // for (int j = i - 1; j >= 0; j --) {
+      //   if (ear_history[j] > reference_ear) {
+      //     slices.push_back(std::make_tuple(i, j));
+      //     break;
+      //   }
+      // }
     }
   }
   if (slices.empty()) {

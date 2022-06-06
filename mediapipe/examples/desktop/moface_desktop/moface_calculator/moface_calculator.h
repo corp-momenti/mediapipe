@@ -59,9 +59,12 @@ namespace moface {
                 prev_state_(moface::eInit),
                 cur_state_(moface::eInit),
                 face_observation_object_(new moface::FaceObservation("")),
-                frame_id_(0)
+                frame_id_(0),
+                width_(1080.0),
+                height_(1920.0)
                 { }
             virtual ~MofaceCalculator() {}
+            void setResolution(double width, double height);
             void sendObservations(const ::mediapipe::NormalizedLandmarkList &landmarks, const ::mediapipe::face_geometry::FaceGeometry &geometry);
             std::string getFaceObservation();
             std::string curState();
@@ -77,6 +80,8 @@ namespace moface {
             ::mediapipe::NormalizedLandmarkList reference_landmark_;
             moface::FaceObservation *face_observation_object_;
             int frame_id_;
+            double width_;
+            double height_;
     };
 }
 

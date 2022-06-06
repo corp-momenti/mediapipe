@@ -126,12 +126,13 @@ bool checkAngryActionAndAddToFaceObservation(
     double mar = calculateMHAR(snapshot_array[i].landmarks);
     mar_history.push_back(mar);
     if (mar > kMHARTheshold && i > kNumOfObservationsToCheck) {
-      for (int j = i - 1; j >= 0; j --) {
-        if (mar_history[j] <= reference_mar) {
-          slices.push_back(std::make_tuple(j, i));
-          break;
-        }
-      }
+      slices.push_back(std::make_tuple(i - 10, i));
+      // for (int j = i - 1; j >= 0; j --) {
+      //   if (mar_history[j] <= reference_mar) {
+      //     slices.push_back(std::make_tuple(j, i));
+      //     break;
+      //   }
+      // }
     }
   }
   if (slices.empty()) {
@@ -221,12 +222,14 @@ bool checkHanppyActionAndAddToFaceObservation(
     double mar2ref = calculateMWAR(reference, snapshot_array[i].landmarks);
     mar_history.push_back(mar2ref);
     if (mar2ref >= kMWARTheshold && i > kNumOfObservationsToCheck) {
-      for (int j = i - 1; j >= 0; j --) {
-        if (mar_history[j] <= kMWARReferece) {
-          slices.push_back(std::make_tuple(j, i));
-          break;
-        }
-      }
+      slices.push_back(std::make_tuple(i - 10, i));
+      //todo
+      // for (int j = i - 1; j >= 0; j --) {
+      //   if (mar_history[j] <= kMWARReferece) {
+      //     slices.push_back(std::make_tuple(j, i));
+      //     break;
+      //   }
+      // }
     }
   }
   if (slices.empty()) {

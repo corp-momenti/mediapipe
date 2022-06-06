@@ -114,6 +114,7 @@ bool isTooClose(
 }
 
 bool isWithinFrame(
+  double width, double height,
   ::mediapipe::NormalizedLandmarkList const& landmarks
 ) {
   //todo

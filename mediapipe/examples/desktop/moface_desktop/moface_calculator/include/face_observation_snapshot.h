@@ -56,14 +56,11 @@ namespace moface {
             ~ObservationTrackedPosition() {}
             template <typename Writer>
             void serialize(Writer& writer) const {
-                writer.StartObject();
-                writer.String("x");
+                writer.StartArray();
                 writer.Double(_x);
-                writer.String("y");
                 writer.Double(_y);
-                writer.String("z");
-                writer.Double(_z);
-                writer.EndObject();
+                //writer.Double(_z);
+                writer.EndArray();
             }
         private:
             double _x, _y, _z;
@@ -93,7 +90,7 @@ namespace moface {
                 writer.Double(_timestamp);
                 writer.String("rotation");
                 _rotation->serialize(writer);
-                writer.String("tracked_position");
+                writer.String("tracked_positions");
                 writer.StartArray();
                 for (
                     std::vector<ObservationTrackedPosition>::const_iterator pos_itr = _tracked_positions.begin();
@@ -123,7 +120,7 @@ namespace moface {
                 writer.Double(_y);
                 writer.String("width");
                 writer.Double(_width);
-                writer.String("Height");
+                writer.String("height");
                 writer.Double(_height);
                 writer.EndObject();
             }
@@ -149,7 +146,7 @@ namespace moface {
             template <typename Writer>
             void serialize(Writer& writer) const {
                 writer.StartObject();
-                writer.String("type");
+                writer.String("action_type");
                 #if RAPIDJSON_HAS_STDSTRING
                 writer.String(_type);
                 #else
