@@ -75,7 +75,7 @@ void addAngryActionToFaceObservation(
     //get the bounding box for mouth
     //width : 167 -> 393, height : 164 -> 18
     moface::ObservationAction *new_action =
-      new moface::ObservationAction("pinch", "angry",
+      new moface::ObservationAction("spread", "angry",
         reference.landmark(kRigthEdgeForAngry).x(),
         reference.landmark(kUpperEdgeForAngry).y(),
         reference.landmark(kLeftEdgeForAngry).x() - reference.landmark(kRigthEdgeForAngry).x(),
@@ -174,8 +174,8 @@ void addHappyActionToFaceObservation(
       new moface::ObservationAction("spread", "happy",
         reference.landmark(kRigthEdgeForHappy).x(),
         reference.landmark(kRigthEdgeForHappy).y(),
-        reference.landmark(kRigthEdgeForHappy).x() - reference.landmark(kLeftEdgeForHappy).x(),
-        reference.landmark(kRigthEdgeForHappy).y() - reference.landmark(kLowerEdgeForHappy).y()
+        reference.landmark(kLeftEdgeForHappy).x() - reference.landmark(kRigthEdgeForHappy).x(),
+        reference.landmark(kLowerEdgeForHappy).y() - reference.landmark(kRigthEdgeForHappy).y()
     );
     for (int i = std::get<0>(slice); i <= std::get<1>(slice); i ++) {
       auto snapshot = snapshot_array[i];

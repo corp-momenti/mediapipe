@@ -222,10 +222,9 @@ void addDragToFaceObservation(
     for (auto snapshot : snapshot_array) {
       moface::ObservationFeed *new_feed = new moface::ObservationFeed(snapshot.frame_id / 30.0, snapshot.pitch, snapshot.yaw, snapshot.roll);
       double x, y;
-      delta_index ++;
       if (drag_face_type == eDragLeft) {
         double delta =
-          (reference.landmark(kRightChinIndex).x() - reference.landmark(kLeftChinIndex).x()) / snapshot_array.size();
+          (reference.landmark(kLeftChinIndex).x() - reference.landmark(kRightChinIndex).x()) / snapshot_array.size();
         x = reference.landmark(kRightChinIndex).x() + delta * delta_index;
         y = reference.landmark(kRightChinIndex).y();
       } else if (drag_face_type == eDragRight) {
@@ -236,7 +235,7 @@ void addDragToFaceObservation(
       } else if (drag_face_type == eDragUp) {
         double delta =
           (reference.landmark(kUnderMouthIndex).y() - reference.landmark(kNoseTipIndex).y()) / snapshot_array.size();
-        x = reference.landmark(kLeftChinIndex).x();
+        x = reference.landmark(kNoseTipIndex).x();
         y = reference.landmark(kUnderMouthIndex).y() - delta * delta_index;
       } else if (drag_face_type == eDragDown) {
         double delta =

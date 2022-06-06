@@ -73,8 +73,8 @@ std::tuple<double, double> getRightEyeCenter(
 std::tuple<double, double, double, double> getRightEyeArea(
   ::mediapipe::NormalizedLandmarkList const& reference
 ) {
-  int x = reference.landmark(kRightEyeRightEdge).x();
-  int y = reference.landmark(kRightEyeUpEdge).y();
+  double x = reference.landmark(kRightEyeRightEdge).x();
+  double y = reference.landmark(kRightEyeUpEdge).y();
   double width = reference.landmark(kRightEyeLeftEdge).x() - x;
   double height = reference.landmark(kRightEyeDownEdge).y() - y;
   return std::tuple<double, double, double, double>(x, y, width, height);
