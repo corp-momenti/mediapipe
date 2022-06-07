@@ -164,6 +164,7 @@ void MofaceCalculator::sendObservations(
             face_observation_snapshot_array_.push_back(new_snapshot);
           }
         } else if (pose_status == eMoving) {
+          face_observation_snapshot_array_.clear();
           moface::FaceObservationSnapShot new_snapshot = {
             .timestamp = frame_id_ / 30.0, //geometry_packet.Timestamp().Seconds(),
             .frame_id = frame_id_,
@@ -236,14 +237,15 @@ void MofaceCalculator::sendObservations(
             //copy(multi_face_landmarks.begin(), multi_face_landmarks.end(), back_inserter(new_snapshot.landmarks));
             face_observation_snapshot_array_.push_back(new_snapshot);
             //todo
-            /*
-            if (dragGoingBackward(face_observation_snapshot_array_)) {
-              warning_callback_(moface::eGoingBackward);
-            }
-            if (dragTooSlow(face_observation_snapshot_array_)) {
-              warning_callback_(moface::eTooSlow);
-            }
-            */
+            // if (dragGoingBackward(face_observation_snapshot_array_)) {
+            //   face_observation_snapshot_array_.pop_back();
+            //   std::cout << "going backward pop back!!!" << std::endl;
+            //   //warning_callback_(moface::eGoingBackward);
+            // } else if (dragTooSlow(face_observation_snapshot_array_)) {
+            //   face_observation_snapshot_array_.pop_back();
+            //   std::cout << "too slow pop back!!!" << std::endl;
+            //   //warning_callback_(moface::eTooSlow);
+            // }
           }
         } else {
           assertm(false, "invalid case in tracking state");

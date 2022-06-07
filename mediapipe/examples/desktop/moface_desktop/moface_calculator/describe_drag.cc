@@ -72,7 +72,7 @@ bool dragGoingBackward(
   std::vector<moface::FaceObservationSnapShot> const& snapshot_array
 ) {
   size_t length = snapshot_array.size();
-  return dragGoingBackward(snapshot_array, length - 1, length - 2);
+  return dragGoingBackward(snapshot_array, length - 2, length - 1);
 }
 
 
@@ -85,10 +85,11 @@ bool dragTooSlow(
   moface::FaceObservationSnapShot cmp_item = snapshot_array[to];
   double time_elapsed = abs(from - to) / 30.0;
   double angle_distance = sqrt(
-    pow(last_item.pitch - cmp_item.pitch,2) +
-    pow(last_item.yaw - cmp_item.yaw,2) /*+
+    pow(last_item.pitch - cmp_item.pitch, 2) +
+    pow(last_item.yaw - cmp_item.yaw, 2) /*+
     pow(last_item.roll - cmp_item.roll,2)*/
   );
+  //std::cout << "angle distance : " << angle_distance << ", velocity : " << (angle_distance / time_elapsed) << std::endl;
   if (kDragSlowLimit >= (angle_distance / time_elapsed)) {
     //std::cout << "Drag Too Slow : Angle Velocity : " <<  (angle_distance / time_elapsed);
     return true;
@@ -100,7 +101,7 @@ bool dragTooSlow(
   std::vector<moface::FaceObservationSnapShot> const& snapshot_array
 ) {
   size_t length = snapshot_array.size();
-  return dragTooSlow(snapshot_array, length - 1, length - 2);
+  return dragTooSlow(snapshot_array, length - 2, length - 1);
 }
 
 bool hasValidDrag(
