@@ -43,7 +43,7 @@ typedef void(^SignalCallback)(
 );
 
 @interface MofaceWrapper : NSObject
-    - (instancetype)init;
+    - (nonnull instancetype)init;
     - (void)setCallbacks:(EventCallback)eventCallback signalCallback:(SignalCallback)signalCallback warningCallback:(WarningCallback)warningCallback;
     - (void)feed:(CMSampleBufferRef)sampleBuffer;
     - (nonnull NSString *)stop;

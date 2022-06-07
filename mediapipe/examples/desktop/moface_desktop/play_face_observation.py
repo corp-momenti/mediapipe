@@ -5,15 +5,15 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import time
 
-play_order = 0
+play_feed_index = 0
 
 action_selection = 0
 
 # width of window
-width = 720
+width = 640
 
 # height of window
-height = 1024
+height = 480
 
 # caption i.e title of the window
 title = "PlayActionTest"
@@ -21,8 +21,14 @@ title = "PlayActionTest"
 # creating a window
 window = pyglet.window.Window(width, height, title)
 
+label = pyglet.text.Label('',
+                          font_name='Times New Roman',
+                          font_size=36,
+                          x=window.width//2, y=window.height//2,
+                          anchor_x='center', anchor_y='center')
+
 # observation path
-observation_path = "/Users/hoyounkim/Work/Momenti/Research/mediapipe/mediapipe/examples/desktop/face_geometry/face-observation/c97916a4-e929-4033-9c88-0a0bd1482959.json"
+observation_path = "/Users/hoyounkim/Work/Momenti/Research/mediapipe/mediapipe/examples/desktop/moface_desktop/face-observation/24130442-a938-4aef-a500-8c9daa01e25e.json"
 
 with open(observation_path) as data_file:
     data = json.load(data_file)
@@ -84,22 +90,51 @@ def on_draw():
 		# make surface to display on the screen
 		player.get_texture().blit(0, 0)
 
+	label.draw()
+
 
 # key press event
 @window.event
 def on_key_press(symbol, modifier):
 	global data
-	global play_order
+	global action_selection
+	global play_feed_index
+	global label
+
+	num_of_actions = len(data['objects'][0]['actions'])
+	selected_action = data['objects'][0]['actions'][action_selection]
+	print(selected_action['desc'])
+	label = pyglet.text.Label(selected_action['desc'],
+			font_name='Times New Roman',
+			font_size=36,
+			x=window.width//2, y=window.height//2,
+			anchor_x='center', anchor_y='center')
 	# key "p" get press
 	if symbol == pyglet.window.key.P:
-		if play_order < len(data['objects'][0]['actions'][action_selection]['feeds']) :
+		if play_feed_index < len(selected_action['feeds']) :
 			# seek & pause the video
-			print('seek at : ', data['objects'][0]['actions'][action_selection]['feeds'][play_order]['timestamp'])
-			player.seek(data['objects'][0]['actions'][action_selection]['feeds'][play_order]['timestamp'])
+			print('seek at : ', selected_action['feeds'][play_feed_index]['timestamp'])
+			player.seek(selected_action['feeds'][play_feed_index]['timestamp'])
 			player.pause()
 			# printing message
-			play_order = play_order + 1
+			play_feed_index = play_feed_index + 1
 		print("Video is paused")
+	if symbol == pyglet.window.key.F:
+		action_selection = action_selection + 1
+		if action_selection >= num_of_actions:
+			action_selection = 0
+		play_feed_index = 0
+		player.seek(selected_action['feeds'][play_feed_index]['timestamp'])
+		player.pause()
+	if symbol == pyglet.window.key.B:
+		action_selection = action_selection - 1
+		if action_selection < 0:
+			action_selection = num_of_actions - 1
+		play_feed_index = 0
+		player.seek(selected_action['feeds'][play_feed_index]['timestamp'])
+		player.pause()
+	if symbol == pyglet.window.key.C:
+		window.close()
 	# key "r" get press
 	if symbol == pyglet.window.key.R:
 

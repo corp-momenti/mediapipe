@@ -13,16 +13,16 @@ constexpr double kReferenceRollMin = 357.0;
 constexpr double kReferenceRollMax = 3.0;
 
 //Reference Range Range
-constexpr double kReferenceRangePitchMin = 355.0;
-constexpr double kReferenceRangePitchMax = 5.0;
-constexpr double kReferenceRangeYawMin = 355.0;
-constexpr double kReferenceRangeYawMax = 5.0;
+constexpr double kReferenceRangePitchMin = 352.0;
+constexpr double kReferenceRangePitchMax = 8.0;
+constexpr double kReferenceRangeYawMin = 352.0;
+constexpr double kReferenceRangeYawMax = 8.0;
 constexpr double kReferenceRangeRollMin = 355.0;
 constexpr double kReferenceRangeRollMax = 5.0;
 
 //Distance Range
-constexpr double kMaxDistanceLimit = 40.0;
-constexpr double kMinDistanceLimit = 30.0;
+constexpr double kMaxDistanceLimit = 45.0;
+constexpr double kMinDistanceLimit = 25.0;
 
 //Frame Range
 constexpr double kMinFrameInX = 0.0;
