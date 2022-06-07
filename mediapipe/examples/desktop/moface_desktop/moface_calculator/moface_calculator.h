@@ -77,7 +77,7 @@ namespace moface {
             geometryCallback geometry_callback_;
             moface::MoFaceState prev_state_, cur_state_;
             std::vector<moface::FaceObservationSnapShot> face_observation_snapshot_array_;
-            ::mediapipe::NormalizedLandmarkList reference_landmark_;
+            moface::FaceObservationSnapShot reference_snapshot_;
             moface::FaceObservation *face_observation_object_;
             int frame_id_;
             double width_;

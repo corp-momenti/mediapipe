@@ -12,15 +12,15 @@ double calculateMHAR(
 );
 
 void addAngryActionToFaceObservation(
-  ::mediapipe::NormalizedLandmarkList const& reference,
+  moface::FaceObservationSnapShot const& reference,
   std::tuple<int, int> slice,
   std::vector<moface::FaceObservationSnapShot> const& snapshot_array,
   moface::FaceObservation *face_observation
 );
 
 bool checkAngryActionAndAddToFaceObservation(
-  ::mediapipe::NormalizedLandmarkList const& reference,
-  std::vector<moface::FaceObservationSnapShot> const& snapshot_array,
+  moface::FaceObservationSnapShot const& reference,
+  std::vector<moface::FaceObservationSnapShot> &snapshot_array,
   moface::FaceObservation *face_observation
 );
 
@@ -37,8 +37,8 @@ void addHappyActionToFaceObservation(
 );
 
 bool checkHanppyActionAndAddToFaceObservation(
-  ::mediapipe::NormalizedLandmarkList const& reference,
-  std::vector<moface::FaceObservationSnapShot> const& snapshot_array,
+  moface::FaceObservationSnapShot const& reference,
+  std::vector<moface::FaceObservationSnapShot> &snapshot_array,
   moface::FaceObservation *face_observation
 );
 

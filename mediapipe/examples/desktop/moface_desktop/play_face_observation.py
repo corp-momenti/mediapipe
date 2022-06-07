@@ -28,7 +28,7 @@ label = pyglet.text.Label('',
                           anchor_x='center', anchor_y='center')
 
 # observation path
-observation_path = "/Users/hoyounkim/Work/Momenti/Research/mediapipe/mediapipe/examples/desktop/moface_desktop/face-observation/24130442-a938-4aef-a500-8c9daa01e25e.json"
+observation_path = "/Users/hoyounkim/Work/Momenti/Research/mediapipe/mediapipe/examples/desktop/moface_desktop/face-observation/9c8827de-3516-45ac-80f3-2c10198e757d.json"
 
 with open(observation_path) as data_file:
     data = json.load(data_file)

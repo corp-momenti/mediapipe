@@ -88,7 +88,7 @@ double calculateRightEAR(const ::mediapipe::NormalizedLandmarkList &landmarks) {
 }
 
 void addBlinkToFaceObservation(
-  ::mediapipe::NormalizedLandmarkList const& reference,
+  moface::FaceObservationSnapShot const& reference,
   std::tuple<int, int> slice,
   std::vector<moface::FaceObservationSnapShot> const& snapshot_array,
   moface::FaceObservation *face_observation
@@ -97,7 +97,7 @@ void addBlinkToFaceObservation(
     moface::ObservationObject *new_object = new moface::ObservationObject("face");
     face_observation->addObject(*new_object);
     }
-    std::tuple<double, double, double, double> left_eye_area = getLeftEyeArea(reference);
+    std::tuple<double, double, double, double> left_eye_area = getLeftEyeArea(reference.landmarks);
     moface::ObservationAction *left_eye_action =
       new moface::ObservationAction(
         "push",
@@ -107,7 +107,7 @@ void addBlinkToFaceObservation(
         (double)std::get<2>(left_eye_area),
         (double)std::get<3>(left_eye_area)
       );
-    std::tuple<double, double> left_eye_center = getLeftEyeCenter(reference);
+    std::tuple<double, double> left_eye_center = getLeftEyeCenter(reference.landmarks);
     for (auto snapshot : snapshot_array) {
       moface::ObservationFeed *new_feed =
         new moface::ObservationFeed(
@@ -122,7 +122,7 @@ void addBlinkToFaceObservation(
     }
     face_observation->lastObject().addAction(*left_eye_action);
 
-    std::tuple<double, double, double, double> right_eye_area = getRightEyeArea(reference);
+    std::tuple<double, double, double, double> right_eye_area = getRightEyeArea(reference.landmarks);
     moface::ObservationAction *right_eye_action =
       new moface::ObservationAction(
         "push",
@@ -132,7 +132,7 @@ void addBlinkToFaceObservation(
         (double)std::get<2>(right_eye_area),
         (double)std::get<3>(right_eye_area)
       );
-    std::tuple<double, double> right_eye_center = getRightEyeCenter(reference);
+    std::tuple<double, double> right_eye_center = getRightEyeCenter(reference.landmarks);
     for (auto snapshot : snapshot_array) {
       moface::ObservationFeed *new_feed =
         new moface::ObservationFeed(
@@ -149,11 +149,11 @@ void addBlinkToFaceObservation(
 }
 
 bool checkBlinkActionAndAddToFaceObservation(
-  ::mediapipe::NormalizedLandmarkList const& reference,
-  std::vector<moface::FaceObservationSnapShot> const& snapshot_array,
+  moface::FaceObservationSnapShot const& reference,
+  std::vector<moface::FaceObservationSnapShot> &snapshot_array,
   moface::FaceObservation *face_observation
 ) {
-  double reference_ear = (calculateLeftEAR(reference) + calculateRightEAR(reference)) * 0.5;
+  double reference_ear = (calculateLeftEAR(reference.landmarks) + calculateRightEAR(reference.landmarks)) * 0.5;
   std::vector<double> ear_history;
   std::vector<std::tuple<int, int>> slices;
   for (int i = 0; i < snapshot_array.size(); i ++) {
@@ -173,6 +173,7 @@ bool checkBlinkActionAndAddToFaceObservation(
   if (slices.empty()) {
     return false;
   }
+  //todo push at slices[0]<0> the reference
   addBlinkToFaceObservation(reference, slices[0], snapshot_array, face_observation);
   return true;
 }

@@ -10,8 +10,9 @@
 #include "describe_drag.h"
 
 //Drag Action Limit
-constexpr double kDragEndingLimitForPitch = 15.0;
-constexpr double kDragEndingLimitForYaw = 20.0;
+constexpr double kDragDownEndingLimitForPitch = 10.0;
+constexpr double kDragUpEndingLimitForPitch = 15.0;
+constexpr double kDragEndingLimitForYaw = 30.0;
 
 //Drag Backward Limit
 constexpr double kDragBackwardLimit = 3.0;
@@ -41,8 +42,8 @@ bool hitDragLimit(
 ) {
     if ((yaw >= kDragEndingLimitForYaw && yaw <= 180.0) ||
         (yaw >= 180.0 && yaw <= 360.0 - kDragEndingLimitForYaw) ||
-        (pitch >= kDragEndingLimitForPitch && pitch <= 180.0) ||
-        (pitch >= 180.0 && pitch <= 360.0 - kDragEndingLimitForPitch)
+        (pitch >= kDragDownEndingLimitForPitch && pitch <= 180.0) || // check down
+        (pitch >= 180.0 && pitch <= 360.0 - kDragUpEndingLimitForPitch) //check up
     ) {
       std::cout << "angle hit : " << yaw;
       return true;
@@ -156,7 +157,7 @@ bool isDownDrag(
     std::vector<moface::FaceObservationSnapShot> const& snapshot_array
 ) {
     double last_pitch = snapshot_array.back().pitch;
-    if (last_pitch >= kDragEndingLimitForPitch && last_pitch <= 180.0) {
+    if (last_pitch >= kDragDownEndingLimitForPitch && last_pitch <= 180.0) {
  //     std::cout << "up drag angle hit : " << last_pitch << std::endl;
       for (auto snap : snapshot_array) {
         if ( (snap.yaw >= kDragOutOfRangeLimit && snap.yaw <= 180.0) ||
@@ -175,7 +176,7 @@ bool isUpDrag(
     std::vector<moface::FaceObservationSnapShot> const& snapshot_array
 ) {
     double last_pitch = snapshot_array.back().pitch;
-    if (last_pitch >= 180.0 && last_pitch <= 360.0 - kDragEndingLimitForPitch) {
+    if (last_pitch >= 180.0 && last_pitch <= 360.0 - kDragUpEndingLimitForPitch) {
 //      std::cout << "down drag angle hit : " << last_pitch << std::endl;
       for (auto snap : snapshot_array) {
         if ((snap.yaw >= kDragOutOfRangeLimit && snap.yaw <= 180.0) ||
@@ -191,7 +192,7 @@ bool isUpDrag(
 }
 
 void addDragToFaceObservation(
-  ::mediapipe::NormalizedLandmarkList const& reference,
+  moface::FaceObservationSnapShot const& reference,
   std::vector<moface::FaceObservationSnapShot> const& snapshot_array,
   moface::FaceObservation *face_observation,
   DragFaceType drag_face_type
@@ -225,24 +226,24 @@ void addDragToFaceObservation(
       double x, y;
       if (drag_face_type == eDragLeft) {
         double delta =
-          (reference.landmark(kLeftChinIndex).x() - reference.landmark(kRightChinIndex).x()) / snapshot_array.size();
-        x = reference.landmark(kRightChinIndex).x() + delta * delta_index;
-        y = reference.landmark(kRightChinIndex).y();
+          (reference.landmarks.landmark(kLeftChinIndex).x() - reference.landmarks.landmark(kRightChinIndex).x()) / snapshot_array.size();
+        x = reference.landmarks.landmark(kRightChinIndex).x() + delta * delta_index;
+        y = reference.landmarks.landmark(kRightChinIndex).y();
       } else if (drag_face_type == eDragRight) {
         double delta =
-          (reference.landmark(kLeftChinIndex).x() - reference.landmark(kRightChinIndex).x()) / snapshot_array.size();
-        x = reference.landmark(kLeftChinIndex).x() - delta * delta_index;
-        y = reference.landmark(kLeftChinIndex).y();
+          (reference.landmarks.landmark(kLeftChinIndex).x() - reference.landmarks.landmark(kRightChinIndex).x()) / snapshot_array.size();
+        x = reference.landmarks.landmark(kLeftChinIndex).x() - delta * delta_index;
+        y = reference.landmarks.landmark(kLeftChinIndex).y();
       } else if (drag_face_type == eDragUp) {
         double delta =
-          (reference.landmark(kUnderMouthIndex).y() - reference.landmark(kNoseTipIndex).y()) / snapshot_array.size();
-        x = reference.landmark(kNoseTipIndex).x();
-        y = reference.landmark(kUnderMouthIndex).y() - delta * delta_index;
+          (reference.landmarks.landmark(kUnderMouthIndex).y() - reference.landmarks.landmark(kNoseTipIndex).y()) / snapshot_array.size();
+        x = reference.landmarks.landmark(kNoseTipIndex).x();
+        y = reference.landmarks.landmark(kUnderMouthIndex).y() - delta * delta_index;
       } else if (drag_face_type == eDragDown) {
         double delta =
-          (reference.landmark(kNoseTipIndex).y() - reference.landmark(kForeheadIndex).y()) / snapshot_array.size();
-        x = reference.landmark(kForeheadIndex).x();
-        y = reference.landmark(kForeheadIndex).y() + delta * delta_index;
+          (reference.landmarks.landmark(kNoseTipIndex).y() - reference.landmarks.landmark(kForeheadIndex).y()) / snapshot_array.size();
+        x = reference.landmarks.landmark(kForeheadIndex).x();
+        y = reference.landmarks.landmark(kForeheadIndex).y() + delta * delta_index;
       } else {
         //todo draw lines through the original path
       }

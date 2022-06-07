@@ -63,7 +63,7 @@ double calculateMHAR(
 }
 
 void addAngryActionToFaceObservation(
-  ::mediapipe::NormalizedLandmarkList const& reference,
+  moface::FaceObservationSnapShot const& reference,
   std::tuple<int, int> slice,
   std::vector<moface::FaceObservationSnapShot> const& snapshot_array,
   moface::FaceObservation *face_observation
@@ -76,10 +76,10 @@ void addAngryActionToFaceObservation(
     //width : 167 -> 393, height : 164 -> 18
     moface::ObservationAction *new_action =
       new moface::ObservationAction("spread", "angry",
-        reference.landmark(kRigthEdgeForAngry).x(),
-        reference.landmark(kUpperEdgeForAngry).y(),
-        reference.landmark(kLeftEdgeForAngry).x() - reference.landmark(kRigthEdgeForAngry).x(),
-        reference.landmark(kLowerEdgeForAngry).y() - reference.landmark(kUpperEdgeForAngry).y()
+        reference.landmarks.landmark(kRigthEdgeForAngry).x(),
+        reference.landmarks.landmark(kUpperEdgeForAngry).y(),
+        reference.landmarks.landmark(kLeftEdgeForAngry).x() - reference.landmarks.landmark(kRigthEdgeForAngry).x(),
+        reference.landmarks.landmark(kLowerEdgeForAngry).y() - reference.landmarks.landmark(kUpperEdgeForAngry).y()
     );
     for (int i = std::get<0>(slice); i <= std::get<1>(slice); i ++) {
       auto snapshot = snapshot_array[i];
@@ -88,16 +88,16 @@ void addAngryActionToFaceObservation(
       double up_x, up_y, down_x, down_y;
       if (i == std::get<0>(slice)) {
         //0, 17
-        up_x = reference.landmark(kUpperEdgeStartForAngry).x();
-        up_y = reference.landmark(kUpperEdgeStartForAngry).y();
-        down_x = reference.landmark(kLowerEdgeStartForAngry).x();
-        down_y = reference.landmark(kLowerEdgeStartForAngry).y();
+        up_x = reference.landmarks.landmark(kUpperEdgeStartForAngry).x();
+        up_y = reference.landmarks.landmark(kUpperEdgeStartForAngry).y();
+        down_x = reference.landmarks.landmark(kLowerEdgeStartForAngry).x();
+        down_y = reference.landmarks.landmark(kLowerEdgeStartForAngry).y();
       } else if (i == std::get<1>(slice)) {
         //164, 18
-        up_x = reference.landmark(kUpperEdgeForAngry).x();
-        up_y = reference.landmark(kUpperEdgeForAngry).y();
-        down_x = reference.landmark(kLowerEdgeForAngry).x();
-        down_y = reference.landmark(kLowerEdgeForAngry).y();
+        up_x = reference.landmarks.landmark(kUpperEdgeForAngry).x();
+        up_y = reference.landmarks.landmark(kUpperEdgeForAngry).y();
+        down_x = reference.landmarks.landmark(kLowerEdgeForAngry).x();
+        down_y = reference.landmarks.landmark(kLowerEdgeForAngry).y();
       } else {
         up_x = 0.0;
         up_y = 0.0;
@@ -115,11 +115,11 @@ void addAngryActionToFaceObservation(
 }
 
 bool checkAngryActionAndAddToFaceObservation(
-  ::mediapipe::NormalizedLandmarkList const& reference,
-  std::vector<moface::FaceObservationSnapShot> const& snapshot_array,
+  moface::FaceObservationSnapShot const& reference,
+  std::vector<moface::FaceObservationSnapShot> &snapshot_array,
   moface::FaceObservation *face_observation
 ) {
-  double reference_mar = calculateMHAR(reference);
+  double reference_mar = calculateMHAR(reference.landmarks);
   std::vector<double> mar_history;
   std::vector<std::tuple<int, int>> slices;
   for (int i = 0; i < snapshot_array.size(); i ++) {
@@ -138,6 +138,7 @@ bool checkAngryActionAndAddToFaceObservation(
   if (slices.empty()) {
     return false;
   }
+  //todo push refernece at slices[0]<0>
   addAngryActionToFaceObservation(reference, slices[0], snapshot_array, face_observation);
   return true;
 }
@@ -159,7 +160,7 @@ double calculateMWAR(
 }
 
 void addHappyActionToFaceObservation(
-  ::mediapipe::NormalizedLandmarkList const& reference,
+  moface::FaceObservationSnapShot const& reference,
   std::tuple<int, int> slice,
   std::vector<moface::FaceObservationSnapShot> const& snapshot_array,
   moface::FaceObservation *face_observation
@@ -172,10 +173,10 @@ void addHappyActionToFaceObservation(
     //width : 216 -> 436, height : 216 -> 202
     moface::ObservationAction *new_action =
       new moface::ObservationAction("spread", "happy",
-        reference.landmark(kRigthEdgeForHappy).x(),
-        reference.landmark(kRigthEdgeForHappy).y(),
-        reference.landmark(kLeftEdgeForHappy).x() - reference.landmark(kRigthEdgeForHappy).x(),
-        reference.landmark(kLowerEdgeForHappy).y() - reference.landmark(kRigthEdgeForHappy).y()
+        reference.landmarks.landmark(kRigthEdgeForHappy).x(),
+        reference.landmarks.landmark(kRigthEdgeForHappy).y(),
+        reference.landmarks.landmark(kLeftEdgeForHappy).x() - reference.landmarks.landmark(kRigthEdgeForHappy).x(),
+        reference.landmarks.landmark(kLowerEdgeForHappy).y() - reference.landmarks.landmark(kRigthEdgeForHappy).y()
     );
     for (int i = std::get<0>(slice); i <= std::get<1>(slice); i ++) {
       auto snapshot = snapshot_array[i];
@@ -184,16 +185,16 @@ void addHappyActionToFaceObservation(
       double right_x, right_y, left_x, left_y;
       if (i == std::get<0>(slice)) {
         //61, 291
-        right_x = reference.landmark(kRightEdgeStartForHappy).x();
-        right_y = reference.landmark(kRightEdgeStartForHappy).y();
-        left_x = reference.landmark(kLeftEdgeStartForHappy).x();
-        left_y = reference.landmark(kLeftEdgeStartForHappy).y();
+        right_x = reference.landmarks.landmark(kRightEdgeStartForHappy).x();
+        right_y = reference.landmarks.landmark(kRightEdgeStartForHappy).y();
+        left_x = reference.landmarks.landmark(kLeftEdgeStartForHappy).x();
+        left_y = reference.landmarks.landmark(kLeftEdgeStartForHappy).y();
       } else if (i == std::get<1>(slice)) {
         //214, 434
-        right_x = reference.landmark(kRightEdgeEndForHappy).x();
-        right_y = reference.landmark(kRightEdgeEndForHappy).y();
-        left_x = reference.landmark(kLeftEdgeEndForHappy).x();
-        left_y = reference.landmark(kLeftEdgeEndForHappy).y();
+        right_x = reference.landmarks.landmark(kRightEdgeEndForHappy).x();
+        right_y = reference.landmarks.landmark(kRightEdgeEndForHappy).y();
+        left_x = reference.landmarks.landmark(kLeftEdgeEndForHappy).x();
+        left_y = reference.landmarks.landmark(kLeftEdgeEndForHappy).y();
       } else {
         right_x = 0.0;
         right_y = 0.0;
@@ -212,14 +213,14 @@ void addHappyActionToFaceObservation(
 }
 
 bool checkHanppyActionAndAddToFaceObservation(
-  ::mediapipe::NormalizedLandmarkList const& reference,
-  std::vector<moface::FaceObservationSnapShot> const& snapshot_array,
+  moface::FaceObservationSnapShot const& reference,
+  std::vector<moface::FaceObservationSnapShot> &snapshot_array,
   moface::FaceObservation *face_observation
 ) {
   std::vector<double> mar_history;
   std::vector<std::tuple<int, int>> slices;
     for (int i = 0; i < snapshot_array.size(); i ++) {
-    double mar2ref = calculateMWAR(reference, snapshot_array[i].landmarks);
+    double mar2ref = calculateMWAR(reference.landmarks, snapshot_array[i].landmarks);
     mar_history.push_back(mar2ref);
     if (mar2ref >= kMWARTheshold && i > kNumOfObservationsToCheck) {
       slices.push_back(std::make_tuple(i - 10, i));
@@ -235,6 +236,7 @@ bool checkHanppyActionAndAddToFaceObservation(
   if (slices.empty()) {
     return false;
   }
+  //todo push refernece at slices[0]<0>
   addHappyActionToFaceObservation(reference, slices[0], snapshot_array, face_observation);
   return true;
 }

@@ -26,7 +26,7 @@
 
 using namespace moface;
 
-constexpr int kNumberOfObservationsForCheckingActions = 90;
+constexpr int kNumberOfObservationsForCheckingActions = 30;
 
 std::string state_to_string(MoFaceState const& in_code) {
     std::string ret_string;
@@ -127,7 +127,14 @@ void MofaceCalculator::sendObservations(
       case moface::eStart:
         if (isReferenceFrame(pitch, yaw, roll)) {
           event_callback_(moface::eReferenceDetected);
-          reference_landmark_ = landmarks;
+          reference_snapshot_ = {
+            .timestamp = 1000.0 * frame_id_ / 30.0, //geometry_packet.Timestamp().Seconds(),
+            .frame_id = frame_id_,
+            .pitch = pitch,
+            .roll = roll,
+            .yaw = yaw
+          };
+          reference_snapshot_.landmarks = landmarks;
           prev_state_ = cur_state_;
           cur_state_ = moface::eReady;
         }
@@ -141,19 +148,20 @@ void MofaceCalculator::sendObservations(
           cur_state_ = moface::eNop;
         } else if (pose_status == eHoldStill) {
           if (face_observation_snapshot_array_.size() > kNumberOfObservationsForCheckingActions) {
-            if (checkBlinkActionAndAddToFaceObservation(reference_landmark_, face_observation_snapshot_array_, face_observation_object_)) {
+            //todo push reference at the front of face_observation_snapshot_array_
+            if (checkBlinkActionAndAddToFaceObservation(reference_snapshot_, face_observation_snapshot_array_, face_observation_object_)) {
               event_callback_(eBlinkActionDetected);
             }
-            if (checkAngryActionAndAddToFaceObservation(reference_landmark_, face_observation_snapshot_array_, face_observation_object_)) {
+            if (checkAngryActionAndAddToFaceObservation(reference_snapshot_, face_observation_snapshot_array_, face_observation_object_)) {
               event_callback_(eAngryActionDetected);
             }
-            if (checkHanppyActionAndAddToFaceObservation(reference_landmark_, face_observation_snapshot_array_, face_observation_object_)) {
+            if (checkHanppyActionAndAddToFaceObservation(reference_snapshot_, face_observation_snapshot_array_, face_observation_object_)) {
               event_callback_(eHappyActionDetected);
             }
             face_observation_snapshot_array_.clear();
           } else {
             moface::FaceObservationSnapShot new_snapshot = {
-              .timestamp = frame_id_ / 30.0, //geometry_packet.Timestamp().Seconds(),
+              .timestamp = 1000.0 * frame_id_ / 30.0, //geometry_packet.Timestamp().Seconds(),
               .frame_id = frame_id_,
               .pitch = pitch,
               .roll = roll,
@@ -166,7 +174,7 @@ void MofaceCalculator::sendObservations(
         } else if (pose_status == eMoving) {
           face_observation_snapshot_array_.clear();
           moface::FaceObservationSnapShot new_snapshot = {
-            .timestamp = frame_id_ / 30.0, //geometry_packet.Timestamp().Seconds(),
+            .timestamp = 1000.0 * frame_id_ / 30.0, //geometry_packet.Timestamp().Seconds(),
             .frame_id = frame_id_,
             .pitch = pitch,
             .roll = roll,
@@ -195,7 +203,7 @@ void MofaceCalculator::sendObservations(
         } else if (pose_status == eMoving) {
           if (hitDragLimit(pitch, yaw, roll)) {
             moface::FaceObservationSnapShot new_snapshot = {
-              .timestamp = frame_id_ / 30.0, //geometry_packet.Timestamp().Seconds(),
+              .timestamp = 1000.0 * frame_id_ / 30.0, //geometry_packet.Timestamp().Seconds(),
               .frame_id = frame_id_,
               .pitch = pitch,
               .roll = roll,
@@ -205,16 +213,20 @@ void MofaceCalculator::sendObservations(
             face_observation_snapshot_array_.push_back(new_snapshot);
             if (hasValidDrag(face_observation_snapshot_array_)) {
               if (isLeftDrag(face_observation_snapshot_array_)) {
-                  addDragToFaceObservation(reference_landmark_, face_observation_snapshot_array_, face_observation_object_, eDragLeft);
+                  //todo push reference at the front of face_observation_snapshot_array_
+                  addDragToFaceObservation(reference_snapshot_, face_observation_snapshot_array_, face_observation_object_, eDragLeft);
                   event_callback_(moface::eLeftActionDetected);
               } else if (isRightDrag(face_observation_snapshot_array_)) {
-                  addDragToFaceObservation(reference_landmark_, face_observation_snapshot_array_, face_observation_object_, eDragRight);
+                  //todo push reference at the front of face_observation_snapshot_array_
+                  addDragToFaceObservation(reference_snapshot_, face_observation_snapshot_array_, face_observation_object_, eDragRight);
                   event_callback_(moface::eRightActionDetected);
               } else if (isUpDrag(face_observation_snapshot_array_)) {
-                  addDragToFaceObservation(reference_landmark_, face_observation_snapshot_array_, face_observation_object_, eDragUp);
+                  //todo push reference at the front of face_observation_snapshot_array_
+                  addDragToFaceObservation(reference_snapshot_, face_observation_snapshot_array_, face_observation_object_, eDragUp);
                   event_callback_(moface::eUpActionDetected);
               } else if (isDownDrag(face_observation_snapshot_array_)) {
-                  addDragToFaceObservation(reference_landmark_, face_observation_snapshot_array_, face_observation_object_, eDragDown);
+                  //todo push reference at the front of face_observation_snapshot_array_
+                  addDragToFaceObservation(reference_snapshot_, face_observation_snapshot_array_, face_observation_object_, eDragDown);
                   event_callback_(moface::eDownActionDetected);
               } else {
                   std::cout << "Invald Drag Cases!!!!";
@@ -227,7 +239,7 @@ void MofaceCalculator::sendObservations(
             cur_state_ = moface::eNop;
           } else {
             moface::FaceObservationSnapShot new_snapshot = {
-              .timestamp = frame_id_ / 30.0, //geometry_packet.Timestamp().Seconds(),
+              .timestamp = 1000.0 * frame_id_ / 30.0, //geometry_packet.Timestamp().Seconds(),
               .frame_id = frame_id_,
               .pitch = pitch,
               .roll = roll,
@@ -284,7 +296,6 @@ void MofaceCalculator::reset() {
     prev_state_ = moface::eInit;
     cur_state_ = moface::eInit;
     face_observation_snapshot_array_.clear();
-    reference_landmark_.clear_landmark();
     face_observation_object_ = NULL;
     frame_id_ = 0;
 }

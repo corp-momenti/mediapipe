@@ -60,7 +60,7 @@ bool isDownDrag(
 );
 
 void addDragToFaceObservation(
-  ::mediapipe::NormalizedLandmarkList const& reference,
+  moface::FaceObservationSnapShot const& reference,
   std::vector<moface::FaceObservationSnapShot> const& snapshot_array,
   moface::FaceObservation *face_observation,
   DragFaceType drag_face_type

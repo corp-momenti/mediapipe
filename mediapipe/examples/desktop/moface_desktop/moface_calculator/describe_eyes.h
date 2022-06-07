@@ -28,15 +28,15 @@ std::tuple<double, double, double, double> getRightEyeArea(
 double calculateRightEAR(const ::mediapipe::NormalizedLandmarkList &landmarks);
 
 void addBlinkToFaceObservation(
-  ::mediapipe::NormalizedLandmarkList const& reference,
+  moface::FaceObservationSnapShot const& reference,
   std::tuple<int, int> slice,
   std::vector<moface::FaceObservationSnapShot> const& snapshot_array,
   moface::FaceObservation *face_observation
 );
 
 bool checkBlinkActionAndAddToFaceObservation(
-  ::mediapipe::NormalizedLandmarkList const& reference,
-  std::vector<moface::FaceObservationSnapShot> const& snapshot_array,
+  moface::FaceObservationSnapShot const& reference,
+  std::vector<moface::FaceObservationSnapShot> &snapshot_array,
   moface::FaceObservation *face_observation
 );
 
