@@ -13,6 +13,10 @@ constexpr int kLowerLipUpperEdge_1 = 87;
 constexpr int kLowerLipUpperEdge_2 = 14;
 constexpr int kLowerLipUpperEdge_3 = 317;
 
+constexpr int kLowerLipLowerEdge_1 = 86;
+constexpr int kLowerLipLowerEdge_2 = 15;
+constexpr int kLowerLipLowerEdge_3 = 316;
+
 constexpr int kRigthEdgeForAngry = 167;
 constexpr int kLeftEdgeForAngry = 393;
 constexpr int kUpperEdgeForAngry = 164;
@@ -39,6 +43,7 @@ constexpr int kLeftEdgeEndForHappy = 434;
 constexpr double kMHARTheshold = 5.0;
 constexpr int kNumOfObservationsToCheck = 10;
 constexpr double kMWARTheshold = 95.0;
+constexpr double kMWAR2Theshold = 7.0;
 constexpr double kMWARReferece = 40.0;
 
 //utils for mouth
@@ -159,6 +164,21 @@ double calculateMWAR(
   return mouth_width / lip_height;
 }
 
+double calculateMWAR2(
+  ::mediapipe::NormalizedLandmarkList const& reference,
+  ::mediapipe::NormalizedLandmarkList const& landmarks
+) {
+  //upper lip upper points 38, 12, 268
+  //lopwer lip lower points 86, 15, 316
+  double mouth_height_1 = euclidian_distance(landmarks.landmark(kUpperLipUpperEdge_1), landmarks.landmark(kLowerLipLowerEdge_1));
+  double mouth_height_2 = euclidian_distance(landmarks.landmark(kUpperLipUpperEdge_2), landmarks.landmark(kLowerLipLowerEdge_2));
+  double mouth_height_3 = euclidian_distance(landmarks.landmark(kUpperLipUpperEdge_3), landmarks.landmark(kLowerLipLowerEdge_3));
+  double mouth_height = (mouth_height_1 + mouth_height_2 + mouth_height_3) / 3;
+  //right mark : 61, left mark : 291
+  double mouth_width = euclidian_distance(landmarks.landmark(kRightEdge), landmarks.landmark(kLeftEdge));
+  return mouth_width / mouth_height;
+}
+
 void addHappyActionToFaceObservation(
   moface::FaceObservationSnapShot const& reference,
   std::tuple<int, int> slice,
@@ -220,9 +240,9 @@ bool checkHanppyActionAndAddToFaceObservation(
   std::vector<double> mar_history;
   std::vector<std::tuple<int, int>> slices;
     for (int i = 0; i < snapshot_array.size(); i ++) {
-    double mar2ref = calculateMWAR(reference.landmarks, snapshot_array[i].landmarks);
+    double mar2ref = calculateMWAR2(reference.landmarks, snapshot_array[i].landmarks);
     mar_history.push_back(mar2ref);
-    if (mar2ref >= kMWARTheshold && i > kNumOfObservationsToCheck) {
+    if (mar2ref >= kMWAR2Theshold && i > kNumOfObservationsToCheck) {
       slices.push_back(std::make_tuple(i - 10, i));
       //todo
       // for (int j = i - 1; j >= 0; j --) {
