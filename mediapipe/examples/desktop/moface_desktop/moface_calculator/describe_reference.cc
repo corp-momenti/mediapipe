@@ -21,8 +21,8 @@ constexpr double kReferenceRangeRollMin = 355.0;
 constexpr double kReferenceRangeRollMax = 5.0;
 
 //Distance Range
-constexpr double kMaxDistanceLimit = 45.0;
-constexpr double kMinDistanceLimit = 25.0;
+constexpr double kMaxDistanceLimit = 40.0;
+constexpr double kMinDistanceLimit = 35.0;
 
 //Frame Range
 constexpr double kMinFrameInX = 0.0;

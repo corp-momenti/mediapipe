@@ -42,8 +42,8 @@ constexpr int kLeftEdgeEndForHappy = 434;
 
 constexpr double kMHARTheshold = 5.0;
 constexpr int kNumOfObservationsToCheck = 10;
-constexpr double kMWARTheshold = 95.0;
-constexpr double kMWAR2Theshold = 7.0;
+constexpr double kMWARTheshold = 100.0;
+constexpr double kMWAR2Theshold = 13.0;
 constexpr double kMWARReferece = 40.0;
 
 //utils for mouth
@@ -89,7 +89,7 @@ void addAngryActionToFaceObservation(
     for (int i = std::get<0>(slice); i <= std::get<1>(slice); i ++) {
       auto snapshot = snapshot_array[i];
       moface::ObservationFeed *new_feed =
-        new moface::ObservationFeed(snapshot.frame_id / 30.0, snapshot.pitch, snapshot.yaw, snapshot.roll);
+        new moface::ObservationFeed(snapshot.timestamp, snapshot.pitch, snapshot.yaw, snapshot.roll);
       double up_x, up_y, down_x, down_y;
       if (i == std::get<0>(slice)) {
         //0, 17
@@ -143,7 +143,7 @@ bool checkAngryActionAndAddToFaceObservation(
   if (slices.empty()) {
     return false;
   }
-  //todo push refernece at slices[0]<0>
+  snapshot_array.insert(snapshot_array.begin() + std::get<0>(slices[0]), reference);
   addAngryActionToFaceObservation(reference, slices[0], snapshot_array, face_observation);
   return true;
 }
@@ -201,7 +201,7 @@ void addHappyActionToFaceObservation(
     for (int i = std::get<0>(slice); i <= std::get<1>(slice); i ++) {
       auto snapshot = snapshot_array[i];
       moface::ObservationFeed *new_feed =
-        new moface::ObservationFeed(snapshot.frame_id / 30.0, snapshot.pitch, snapshot.yaw, snapshot.roll);
+        new moface::ObservationFeed(snapshot.timestamp, snapshot.pitch, snapshot.yaw, snapshot.roll);
       double right_x, right_y, left_x, left_y;
       if (i == std::get<0>(slice)) {
         //61, 291
@@ -242,6 +242,7 @@ bool checkHanppyActionAndAddToFaceObservation(
     for (int i = 0; i < snapshot_array.size(); i ++) {
     double mar2ref = calculateMWAR2(reference.landmarks, snapshot_array[i].landmarks);
     mar_history.push_back(mar2ref);
+    //std::cout << "mwar2 : " << mar2ref << std::endl;;
     if (mar2ref >= kMWAR2Theshold && i > kNumOfObservationsToCheck) {
       slices.push_back(std::make_tuple(i - 10, i));
       //todo
@@ -256,7 +257,7 @@ bool checkHanppyActionAndAddToFaceObservation(
   if (slices.empty()) {
     return false;
   }
-  //todo push refernece at slices[0]<0>
+  snapshot_array.insert(snapshot_array.begin() + std::get<0>(slices[0]), reference);
   addHappyActionToFaceObservation(reference, slices[0], snapshot_array, face_observation);
   return true;
 }

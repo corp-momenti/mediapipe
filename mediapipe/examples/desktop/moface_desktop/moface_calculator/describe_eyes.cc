@@ -30,7 +30,7 @@ constexpr int kRightEyeVertial_2_DownEdge = 153;
 constexpr int kRightEyeHorzRightEdge = 33;
 constexpr int kRightEyeHorzLeftEdge = 133;
 
-constexpr double kEarThreshold = 0.35;
+constexpr double kEarThreshold = 0.38;
 
 
 std::tuple<double, double> getLeftEyeCenter(
@@ -111,7 +111,7 @@ void addBlinkToFaceObservation(
     for (auto snapshot : snapshot_array) {
       moface::ObservationFeed *new_feed =
         new moface::ObservationFeed(
-          snapshot.frame_id / 30.0, snapshot.pitch, snapshot.yaw, snapshot.roll
+          snapshot.timestamp, snapshot.pitch, snapshot.yaw, snapshot.roll
         );
       moface::ObservationTrackedPosition *new_track =
         new moface::ObservationTrackedPosition(
@@ -136,7 +136,7 @@ void addBlinkToFaceObservation(
     for (auto snapshot : snapshot_array) {
       moface::ObservationFeed *new_feed =
         new moface::ObservationFeed(
-          snapshot.frame_id / 30.0, snapshot.pitch, snapshot.yaw, snapshot.roll
+          snapshot.timestamp, snapshot.pitch, snapshot.yaw, snapshot.roll
         );
       moface::ObservationTrackedPosition *new_track =
         new moface::ObservationTrackedPosition(
@@ -159,6 +159,7 @@ bool checkBlinkActionAndAddToFaceObservation(
   for (int i = 0; i < snapshot_array.size(); i ++) {
     double ear = (calculateLeftEAR(snapshot_array[i].landmarks) + calculateRightEAR(snapshot_array[i].landmarks)) * 0.5;
     ear_history.push_back(ear);
+    //std::cout << "ear : " << ear << std::endl;
     if (ear < kEarThreshold && i > 10) {
       slices.push_back(std::make_tuple(i - 10, i));
       //todo
@@ -173,7 +174,7 @@ bool checkBlinkActionAndAddToFaceObservation(
   if (slices.empty()) {
     return false;
   }
-  //todo push at slices[0]<0> the reference
+  snapshot_array.insert(snapshot_array.begin() + std::get<0>(slices[0]), reference);
   addBlinkToFaceObservation(reference, slices[0], snapshot_array, face_observation);
   return true;
 }

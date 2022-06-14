@@ -59,6 +59,7 @@ namespace moface {
                 prev_state_(moface::eInit),
                 cur_state_(moface::eInit),
                 face_observation_object_(new moface::FaceObservation("")),
+                ready_moving_count_(0),
                 frame_id_(0),
                 width_(1080.0),
                 height_(1920.0)
@@ -79,6 +80,7 @@ namespace moface {
             std::vector<moface::FaceObservationSnapShot> face_observation_snapshot_array_;
             moface::FaceObservationSnapShot reference_snapshot_;
             moface::FaceObservation *face_observation_object_;
+            int ready_moving_count_;
             int frame_id_;
             double width_;
             double height_;

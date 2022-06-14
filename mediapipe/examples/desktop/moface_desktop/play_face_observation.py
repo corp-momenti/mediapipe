@@ -30,12 +30,35 @@ label = pyglet.text.Label('',
 # observation path
 observation_path = "/Users/hoyounkim/Work/Momenti/Research/mediapipe/mediapipe/examples/desktop/moface_desktop/face-observation/9c8827de-3516-45ac-80f3-2c10198e757d.json"
 
+def display_rotation(action):
+	df = pd.json_normalize(action['feeds'])
+	print(df)
+	fig = plt.figure()
+	st = fig.suptitle("angles", fontsize="x-large")
+
+	ax1 = fig.add_subplot(311)
+	ax1.plot(df['rotation.pitch'])
+	ax1.set_title("pitch")
+
+	ax2 = fig.add_subplot(312)
+	ax2.plot(df['rotation.yaw'])
+	ax2.set_title("yaw")
+
+	ax3 = fig.add_subplot(313)
+	ax3.plot(df['rotation.roll'])
+	ax3.set_title("roll")
+
+	fig.tight_layout()
+
+	# shift subplots down:
+	st.set_y(0.95)
+	fig.subplots_adjust(top=0.85)
+	plt.show(block=False)
+
 with open(observation_path) as data_file:
     data = json.load(data_file)
 #df = pd.json_normalize(data['objects'][0]['actions'][0]['feeds'], 'tracked_positions')
-df = pd.json_normalize(data['objects'][0]['actions'][action_selection]['feeds'])
-
-print(df)
+#df = pd.json_normalize(data['objects'][0]['actions'][action_selection]['feeds'])
 
 # video path
 vidPath = data['file_path']
@@ -51,29 +74,6 @@ MediaLoad = pyglet.media.load(vidPath)
 
 # add this media in the queue
 player.queue(MediaLoad)
-
-fig = plt.figure()
-st = fig.suptitle("angles", fontsize="x-large")
-
-ax1 = fig.add_subplot(311)
-ax1.plot(df['rotation.pitch'])
-ax1.set_title("pitch")
-
-ax2 = fig.add_subplot(312)
-ax2.plot(df['rotation.yaw'])
-ax2.set_title("yaw")
-
-ax3 = fig.add_subplot(313)
-ax3.plot(df['rotation.roll'])
-ax3.set_title("roll")
-
-fig.tight_layout()
-
-# shift subplots down:
-st.set_y(0.95)
-fig.subplots_adjust(top=0.85)
-
-plt.show(block=False)
 
 # on draw event
 @window.event
@@ -102,13 +102,6 @@ def on_key_press(symbol, modifier):
 	global label
 
 	num_of_actions = len(data['objects'][0]['actions'])
-	selected_action = data['objects'][0]['actions'][action_selection]
-	print(selected_action['desc'])
-	label = pyglet.text.Label(selected_action['desc'],
-			font_name='Times New Roman',
-			font_size=36,
-			x=window.width//2, y=window.height//2,
-			anchor_x='center', anchor_y='center')
 	# key "p" get press
 	if symbol == pyglet.window.key.P:
 		if play_feed_index < len(selected_action['feeds']) :
@@ -123,16 +116,32 @@ def on_key_press(symbol, modifier):
 		action_selection = action_selection + 1
 		if action_selection >= num_of_actions:
 			action_selection = 0
+		selected_action = data['objects'][0]['actions'][action_selection]
 		play_feed_index = 0
 		player.seek(selected_action['feeds'][play_feed_index]['timestamp'])
 		player.pause()
+		print(selected_action['desc'])
+		label = pyglet.text.Label(selected_action['desc'],
+				font_name='Times New Roman',
+				font_size=36,
+				x=window.width//2, y=window.height//2,
+				anchor_x='center', anchor_y='center')
+		display_rotation(selected_action)
 	if symbol == pyglet.window.key.B:
 		action_selection = action_selection - 1
 		if action_selection < 0:
 			action_selection = num_of_actions - 1
+		selected_action = data['objects'][0]['actions'][action_selection]
 		play_feed_index = 0
 		player.seek(selected_action['feeds'][play_feed_index]['timestamp'])
 		player.pause()
+		print(selected_action['desc'])
+		label = pyglet.text.Label(selected_action['desc'],
+				font_name='Times New Roman',
+				font_size=36,
+				x=window.width//2, y=window.height//2,
+				anchor_x='center', anchor_y='center')
+		display_rotation(selected_action)
 	if symbol == pyglet.window.key.C:
 		window.close()
 	# key "r" get press
@@ -144,10 +153,16 @@ def on_key_press(symbol, modifier):
 		# printing message
 		print("Video is resumed")
 
-# seek video at time stamp = 4
-player.seek(0)
-
-# pause the video
+#select the first action and show label
+selected_action = data['objects'][0]['actions'][action_selection]
+print(selected_action['desc'])
+label = pyglet.text.Label(selected_action['desc'],
+		font_name='Times New Roman',
+		font_size=36,
+		x=window.width//2, y=window.height//2,
+		anchor_x='center', anchor_y='center')
+#show the first frame of the first action
+player.seek(selected_action['feeds'][play_feed_index]['timestamp'])
 player.pause()
 
 # run the pyglet application

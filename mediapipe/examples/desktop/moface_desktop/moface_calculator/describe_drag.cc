@@ -10,7 +10,7 @@
 #include "describe_drag.h"
 
 //Drag Action Limit
-constexpr double kDragDownEndingLimitForPitch = 10.0;
+constexpr double kDragDownEndingLimitForPitch = 15.0;
 constexpr double kDragUpEndingLimitForPitch = 15.0;
 constexpr double kDragEndingLimitForYaw = 30.0;
 
@@ -222,7 +222,7 @@ void addDragToFaceObservation(
     moface::ObservationAction *new_action = new moface::ObservationAction("drag", desc, 0.0, 0.0, 1080.0, 1920.0);
     int delta_index = 0;
     for (auto snapshot : snapshot_array) {
-      moface::ObservationFeed *new_feed = new moface::ObservationFeed(snapshot.frame_id / 30.0, snapshot.pitch, snapshot.yaw, snapshot.roll);
+      moface::ObservationFeed *new_feed = new moface::ObservationFeed(snapshot.timestamp, snapshot.pitch, snapshot.yaw, snapshot.roll);
       double x, y;
       if (drag_face_type == eDragLeft) {
         double delta =
