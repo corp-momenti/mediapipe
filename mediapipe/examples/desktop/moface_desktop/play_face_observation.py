@@ -23,12 +23,12 @@ window = pyglet.window.Window(width, height, title)
 
 label = pyglet.text.Label('',
                           font_name='Times New Roman',
-                          font_size=36,
-                          x=window.width//2, y=window.height//2,
+                          font_size=14,
+                          x=window.width//4, y=window.height//4,
                           anchor_x='center', anchor_y='center')
 
 # observation path
-observation_path = "/Users/hoyounkim/Work/Momenti/Research/mediapipe/mediapipe/examples/desktop/moface_desktop/face-observation/9c8827de-3516-45ac-80f3-2c10198e757d.json"
+observation_path = "/Users/hoyounkim/Work/Momenti/Research/mediapipe/mediapipe/examples/desktop/moface_desktop/face-observation/fce4a607-29f6-4679-bc02-5b15fd74756b.json"
 
 def display_rotation(action):
 	df = pd.json_normalize(action['feeds'])
@@ -104,10 +104,11 @@ def on_key_press(symbol, modifier):
 	num_of_actions = len(data['objects'][0]['actions'])
 	# key "p" get press
 	if symbol == pyglet.window.key.P:
+		selected_action = data['objects'][0]['actions'][action_selection]
 		if play_feed_index < len(selected_action['feeds']) :
 			# seek & pause the video
-			print('seek at : ', selected_action['feeds'][play_feed_index]['timestamp'])
-			player.seek(selected_action['feeds'][play_feed_index]['timestamp'])
+			print('seek at : ', selected_action['feeds'][play_feed_index]['timestamp'] / 1000.0)
+			player.seek(round(selected_action['feeds'][play_feed_index]['timestamp'] / 1000, 6))
 			player.pause()
 			# printing message
 			play_feed_index = play_feed_index + 1
@@ -118,7 +119,7 @@ def on_key_press(symbol, modifier):
 			action_selection = 0
 		selected_action = data['objects'][0]['actions'][action_selection]
 		play_feed_index = 0
-		player.seek(selected_action['feeds'][play_feed_index]['timestamp'])
+		player.seek(round(selected_action['feeds'][play_feed_index]['timestamp'] / 1000, 6))
 		player.pause()
 		print(selected_action['desc'])
 		label = pyglet.text.Label(selected_action['desc'],
@@ -133,7 +134,7 @@ def on_key_press(symbol, modifier):
 			action_selection = num_of_actions - 1
 		selected_action = data['objects'][0]['actions'][action_selection]
 		play_feed_index = 0
-		player.seek(selected_action['feeds'][play_feed_index]['timestamp'])
+		player.seek(round(selected_action['feeds'][play_feed_index]['timestamp'] / 1000, 6))
 		player.pause()
 		print(selected_action['desc'])
 		label = pyglet.text.Label(selected_action['desc'],
@@ -162,7 +163,7 @@ label = pyglet.text.Label(selected_action['desc'],
 		x=window.width//2, y=window.height//2,
 		anchor_x='center', anchor_y='center')
 #show the first frame of the first action
-player.seek(selected_action['feeds'][play_feed_index]['timestamp'])
+player.seek(round(selected_action['feeds'][play_feed_index]['timestamp'] / 1000, 6));
 player.pause()
 
 # run the pyglet application

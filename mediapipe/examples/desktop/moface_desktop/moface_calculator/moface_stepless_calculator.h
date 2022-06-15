@@ -40,13 +40,6 @@ namespace moface {
         eTimeout
     };
 
-    enum MofaceDetectionHintType {
-        eDetectBlink,
-        eDetectHappy,
-        eDetectAngry,
-        eDetectDrag
-    };
-
     typedef void (*eventCallback)(MoFaceEventType event);
     typedef void (*warningCallback)(MoFaceWarningType warning);
     typedef void (*signalCallback)(MofaceDistanceStatus distance, MofacePoseStatus pose, bool inFrame, cv::Point center);
@@ -72,28 +65,6 @@ namespace moface {
                 { }
             virtual ~MofaceCalculator() {}
             void setResolution(double width, double height);
-            void setHint(MofaceDetectionHintType hint) {
-                switch (hint) {
-                    case eDetectBlink:
-                        prev_state_ = cur_state_;
-                        cur_state_ = moface::eCheckingEyes;
-                        break;
-                    case eDetectAngry:
-                        prev_state_ = cur_state_;
-                        cur_state_ = moface::eCheckingAngry;
-                        break;
-                    case eDetectHappy:
-                        prev_state_ = cur_state_;
-                        cur_state_ = moface::eCheckingHappy;
-                        break;
-                    case eDetectDrag:
-                        prev_state_ = cur_state_;
-                        cur_state_ = moface::eReady;
-                        break;
-                    default:
-                        break;
-                }
-            }
             void sendObservations(const ::mediapipe::NormalizedLandmarkList &landmarks, const ::mediapipe::face_geometry::FaceGeometry &geometry);
             std::string getFaceObservation();
             std::string curState();

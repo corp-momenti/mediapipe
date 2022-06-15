@@ -29,8 +29,13 @@ double calculateMWAR(
   ::mediapipe::NormalizedLandmarkList const& landmark
 );
 
-void addHappyActionToFaceObservation(
+double calculateMWAR2(
   ::mediapipe::NormalizedLandmarkList const& reference,
+  ::mediapipe::NormalizedLandmarkList const& landmark
+);
+
+void addHappyActionToFaceObservation(
+  moface::FaceObservationSnapShot const& reference,
   std::tuple<int, int> slice,
   std::vector<moface::FaceObservationSnapShot> const& snapshot_array,
   moface::FaceObservation *face_observation
@@ -40,6 +45,15 @@ bool checkHanppyActionAndAddToFaceObservation(
   moface::FaceObservationSnapShot const& reference,
   std::vector<moface::FaceObservationSnapShot> &snapshot_array,
   moface::FaceObservation *face_observation
+);
+
+bool checkAngryMouth(
+  ::mediapipe::NormalizedLandmarkList const& landmarks
+);
+
+bool checkHappyMouth(
+  ::mediapipe::NormalizedLandmarkList const& reference,
+  ::mediapipe::NormalizedLandmarkList const& landmarks
 );
 
 #endif

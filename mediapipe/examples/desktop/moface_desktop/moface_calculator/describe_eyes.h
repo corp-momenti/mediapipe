@@ -40,4 +40,6 @@ bool checkBlinkActionAndAddToFaceObservation(
   moface::FaceObservation *face_observation
 );
 
+bool checkEyesClosed(::mediapipe::NormalizedLandmarkList const& landmarks);
+
 #endif

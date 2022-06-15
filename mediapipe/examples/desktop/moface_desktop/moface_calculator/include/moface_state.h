@@ -9,6 +9,9 @@ namespace moface {
         eStart,
         eReady,
         eDragTracking,
+        eCheckingEyes,
+        eCheckingAngry,
+        eCheckingHappy,
         eNop
     };
 }

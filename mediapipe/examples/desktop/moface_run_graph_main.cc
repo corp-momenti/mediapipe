@@ -25,6 +25,14 @@
 #include "moface_desktop/moface_calculator/moface_calculator.h"
 #include "moface_desktop/moface_calculator/include/custum_uuid.h"  //todo get it out of moface calculator
 
+enum MoFaceUIState {
+  eReference,
+  eDrag,
+  eBlink,
+  eHappy,
+  eAngry
+};
+
 constexpr char kInputStream[] = "input_video";
 constexpr char kOutputStream[] = "output_video";
 constexpr char kOutputFaceLandmarkStream[] = "multi_face_landmarks";
@@ -32,6 +40,9 @@ constexpr char kOutputFaceGeometryStream[] = "multi_face_geometry";
 constexpr char kWindowName[] = "MediaPipe";
 
 constexpr char kDetectedReferenceFramePath[] = "./mediapipe/examples/desktop/moface_desktop/reference";
+constexpr char kDetectedBlinkFramePath[] = "./mediapipe/examples/desktop/moface_desktop/blink";
+constexpr char kDetectedAngryFramePath[] = "./mediapipe/examples/desktop/moface_desktop/angry";
+constexpr char kDetectedHappyFramePath[] = "./mediapipe/examples/desktop/moface_desktop/happy";
 constexpr char kDetectedFaceObservationPath[] = "./mediapipe/examples/desktop/moface_desktop/face-observation";
 constexpr char kOuputVideoPath[] = "./mediapipe/examples/desktop/moface_desktop/output-video";
 
@@ -99,7 +110,7 @@ void showDebugInfo(
 }
 
 void showDebugInfo2(
-  std::string distance, std::string pose, std::string in_frame, std::string state,
+  std::string distance, std::string pose, std::string in_frame, std::string state, /*std::string ear_text,*/
   std::string left_drag, std::string right_drag, std::string up_drag, std::string down_drag,
   std::string blink, std::string angry, std::string happy,
   cv::Mat output_frame_mat
@@ -143,6 +154,15 @@ void showDebugInfo2(
     CV_RGB(255, 0, 0),
     2
   );
+  // cv::putText(
+  //   output_frame_mat,
+  //   ear_text,
+  //   cv::Point(text_left_align_pos, 100),
+  //   cv::FONT_HERSHEY_DUPLEX,
+  //   0.5,
+  //   CV_RGB(255, 0, 0),
+  //   2
+  // );
 
   //actions
   cv::putText(
@@ -239,7 +259,14 @@ bool blink_captured = false;
 bool angry_captured = false;
 bool happy_captured = false;
 
+MoFaceUIState cur_state = eReference;
+MoFaceUIState prev_state = eReference;
+
 void eventNotifier(moface::MoFaceEventType event) {
+  std::string blink_file_name = std::string(kDetectedBlinkFramePath) + "/" + moface::generate_uuid_v4() + ".png";
+  std::string angry_file_name = std::string(kDetectedAngryFramePath) + "/" + moface::generate_uuid_v4() + ".png";
+  std::string happy_file_name = std::string(kDetectedHappyFramePath) + "/" + moface::generate_uuid_v4() + ".png";
+  std::string reference_file_name = std::string(kDetectedReferenceFramePath) + "/" + moface::generate_uuid_v4() + ".png";
   switch (event) {
     case moface::eRightActionDetected:
       right_drag_count ++;
@@ -262,6 +289,7 @@ void eventNotifier(moface::MoFaceEventType event) {
       down_drag_captured = true;
     break;
     case moface::eBlinkActionDetected:
+      cv::imwrite(blink_file_name, output_frame_mat);
       blink_count ++;
       blink_count_text = "BLK : " + std::to_string(blink_count);
       blink_captured = true;
@@ -269,18 +297,23 @@ void eventNotifier(moface::MoFaceEventType event) {
     case moface::eMouthActionDetected:
     break;
     case moface::eAngryActionDetected:
+      cv::imwrite(angry_file_name, output_frame_mat);
       angry_count ++;
       angry_count_text = "ANG : " + std::to_string(angry_count);
       angry_captured = true;
     break;
     case moface::eHappyActionDetected:
+      cv::imwrite(happy_file_name, output_frame_mat);
       happy_count ++;
       happy_count_text = "HPY : " + std::to_string(happy_count);
       happy_captured = true;
     break;
     case moface::eReferenceDetected:
-      std::string tmp_file_name = std::string(kDetectedReferenceFramePath) + "/" + moface::generate_uuid_v4() + ".png";
-      cv::imwrite(tmp_file_name, output_frame_mat);
+      cv::imwrite(reference_file_name, output_frame_mat);
+      cur_state = eDrag;
+      prev_state = eReference;
+    break;
+    default:
     break;
   }
 }
@@ -348,10 +381,16 @@ absl::Status RunMPPGraph() {
   std::string calculator_graph_config_contents;
 
   std::filesystem::remove_all(kDetectedReferenceFramePath);
+  std::filesystem::remove_all(kDetectedBlinkFramePath);
+  std::filesystem::remove_all(kDetectedAngryFramePath);
+  std::filesystem::remove_all(kDetectedHappyFramePath);
   std::filesystem::remove_all(kDetectedFaceObservationPath);
   std::filesystem::remove_all(kOuputVideoPath);
 
   std::filesystem::create_directories(kDetectedReferenceFramePath);
+  std::filesystem::create_directories(kDetectedBlinkFramePath);
+  std::filesystem::create_directories(kDetectedAngryFramePath);
+  std::filesystem::create_directories(kDetectedHappyFramePath);
   std::filesystem::create_directories(kDetectedFaceObservationPath);
   std::filesystem::create_directories(kOuputVideoPath);
 
@@ -407,13 +446,39 @@ absl::Status RunMPPGraph() {
       right_drag_captured &&
       up_drag_captured &&
       down_drag_captured &&
+      cur_state == eDrag
+    ) {
+      cur_state = eBlink;
+      prev_state = eDrag;
+      moface_calculator->setHint(moface::eDetectBlink);
+    }
+
+    if (
       blink_captured &&
+      cur_state == eBlink
+    ) {
+      cur_state = eHappy;
+      prev_state = eBlink;
+      moface_calculator->setHint(moface::eDetectHappy);
+    }
+
+    if (
+      happy_captured &&
+      cur_state == eHappy
+    ) {
+      cur_state = eAngry;
+      prev_state = eHappy;
+      moface_calculator->setHint(moface::eDetectAngry);
+    }
+
+    if (
       angry_captured &&
-      happy_captured
+      cur_state == eAngry
     ) {
       std::cout << "All actions are captured!!!!";
       break;
     }
+
     // Capture opencv camera or video frame.
     cv::Mat camera_frame_raw;
     capture >> camera_frame_raw;

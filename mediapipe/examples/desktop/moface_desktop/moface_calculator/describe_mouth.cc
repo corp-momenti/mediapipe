@@ -40,7 +40,7 @@ constexpr int kLeftEdgeStartForHappy = 291;
 constexpr int kRightEdgeEndForHappy = 214;
 constexpr int kLeftEdgeEndForHappy = 434;
 
-constexpr double kMHARTheshold = 5.0;
+constexpr double kMHARTheshold = 13.0;
 constexpr int kNumOfObservationsToCheck = 10;
 constexpr double kMWARTheshold = 100.0;
 constexpr double kMWAR2Theshold = 13.0;
@@ -260,4 +260,25 @@ bool checkHanppyActionAndAddToFaceObservation(
   snapshot_array.insert(snapshot_array.begin() + std::get<0>(slices[0]), reference);
   addHappyActionToFaceObservation(reference, slices[0], snapshot_array, face_observation);
   return true;
+}
+
+bool checkAngryMouth(
+  ::mediapipe::NormalizedLandmarkList const& landmarks
+) {
+  double mhar = calculateMHAR(landmarks);
+  if (mhar >= kMHARTheshold) {
+    return true;
+  }
+  return false;
+}
+
+bool checkHappyMouth(
+  ::mediapipe::NormalizedLandmarkList const& reference,
+  ::mediapipe::NormalizedLandmarkList const& landmarks
+) {
+  double mwar = calculateMWAR2(reference, landmarks);
+  if (mwar >= kMWAR2Theshold) {
+    return true;
+  }
+  return false;
 }
