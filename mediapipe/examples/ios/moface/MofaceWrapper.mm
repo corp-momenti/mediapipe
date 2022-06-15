@@ -206,13 +206,13 @@ void geometryNotifier(double pitch, double yaw, double roll, double distance) {
 - (void)provideHint:(DetectionHintType) hint {
     moface::MofaceDetectionHintType type;
     switch (hint) {
-        case DetectionHintType::HintBlink:
+        case HintBlink:
             type = moface::eDetectBlink;
             break;
-        case DetectionHintType::HintHappy:
+        case HintHappy:
             type = moface::eDetectHappy;
             break;
-        case DetectionHintType::HintAngry:
+        case HintAngry:
             type = moface::eDetectAngry;
             break;
         default:
@@ -224,6 +224,7 @@ void geometryNotifier(double pitch, double yaw, double roll, double distance) {
 
 - (void)startGraph {
     // Start running self.mediapipeGraph.
+    NSLog(@"start Graph!!!!!");
     NSError* error;
     if (![self.mediapipeGraph startWithError:&error]) {
         NSLog(@"Failed to start graph: %@", error);

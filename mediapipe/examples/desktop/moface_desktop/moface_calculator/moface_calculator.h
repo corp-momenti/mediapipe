@@ -6,6 +6,7 @@
 #include "include/face_observation_snapshot.h"
 #include "include/moface_state.h"
 #include "mediapipe/framework/port/opencv_highgui_inc.h"
+#include <mutex>
 
 namespace moface {
 
@@ -73,6 +74,8 @@ namespace moface {
             virtual ~MofaceCalculator() {}
             void setResolution(double width, double height);
             void setHint(MofaceDetectionHintType hint) {
+                state_mutex_.lock();
+                std::cout << "!! cur state : " << cur_state_ << ", prev stats: " << prev_state_ << std::endl;
                 switch (hint) {
                     case eDetectBlink:
                         prev_state_ = cur_state_;
@@ -87,12 +90,14 @@ namespace moface {
                         cur_state_ = moface::eCheckingHappy;
                         break;
                     case eDetectDrag:
-                        prev_state_ = cur_state_;
-                        cur_state_ = moface::eReady;
+                        // prev_state_ = cur_state_;
+                        // cur_state_ = moface::eReady;
                         break;
                     default:
                         break;
                 }
+                std::cout << "!! cur state : " << cur_state_ << ", prev stats: " << prev_state_ << std::endl;
+                state_mutex_.unlock();
             }
             void sendObservations(const ::mediapipe::NormalizedLandmarkList &landmarks, const ::mediapipe::face_geometry::FaceGeometry &geometry);
             std::string getFaceObservation();
@@ -111,6 +116,7 @@ namespace moface {
             int frame_id_;
             double width_;
             double height_;
+            std::mutex state_mutex_;
     };
 }
 

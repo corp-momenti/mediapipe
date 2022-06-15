@@ -40,10 +40,12 @@ constexpr int kLeftEdgeStartForHappy = 291;
 constexpr int kRightEdgeEndForHappy = 214;
 constexpr int kLeftEdgeEndForHappy = 434;
 
-constexpr double kMHARTheshold = 13.0;
+constexpr double kMHARThesholdForDesktop = 13.0;
+constexpr double kMHARThesholdForMobile = 16.0;
 constexpr int kNumOfObservationsToCheck = 10;
 constexpr double kMWARTheshold = 100.0;
-constexpr double kMWAR2Theshold = 13.0;
+constexpr double kMWAR2ThesholdForMobile = 33.0;
+constexpr double kMWAR2ThesholdForDesktop = 13.0;
 constexpr double kMWARReferece = 40.0;
 
 //utils for mouth
@@ -130,7 +132,7 @@ bool checkAngryActionAndAddToFaceObservation(
   for (int i = 0; i < snapshot_array.size(); i ++) {
     double mar = calculateMHAR(snapshot_array[i].landmarks);
     mar_history.push_back(mar);
-    if (mar > kMHARTheshold && i > kNumOfObservationsToCheck) {
+    if (mar > kMHARThesholdForMobile && i > kNumOfObservationsToCheck) {
       slices.push_back(std::make_tuple(i - 10, i));
       // for (int j = i - 1; j >= 0; j --) {
       //   if (mar_history[j] <= reference_mar) {
@@ -243,7 +245,7 @@ bool checkHanppyActionAndAddToFaceObservation(
     double mar2ref = calculateMWAR2(reference.landmarks, snapshot_array[i].landmarks);
     mar_history.push_back(mar2ref);
     //std::cout << "mwar2 : " << mar2ref << std::endl;;
-    if (mar2ref >= kMWAR2Theshold && i > kNumOfObservationsToCheck) {
+    if (mar2ref >= kMWAR2ThesholdForMobile && i > kNumOfObservationsToCheck) {
       slices.push_back(std::make_tuple(i - 10, i));
       //todo
       // for (int j = i - 1; j >= 0; j --) {
@@ -266,7 +268,7 @@ bool checkAngryMouth(
   ::mediapipe::NormalizedLandmarkList const& landmarks
 ) {
   double mhar = calculateMHAR(landmarks);
-  if (mhar >= kMHARTheshold) {
+  if (mhar >= kMHARThesholdForMobile) {
     return true;
   }
   return false;
@@ -277,7 +279,7 @@ bool checkHappyMouth(
   ::mediapipe::NormalizedLandmarkList const& landmarks
 ) {
   double mwar = calculateMWAR2(reference, landmarks);
-  if (mwar >= kMWAR2Theshold) {
+  if (mwar >= kMWAR2ThesholdForMobile) {
     return true;
   }
   return false;

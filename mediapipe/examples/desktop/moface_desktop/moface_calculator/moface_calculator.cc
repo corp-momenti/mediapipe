@@ -137,7 +137,7 @@ void MofaceCalculator::sendObservations(
       withinFrame,
       cv::Point(landmarks.landmark(0).x(), landmarks.landmark(0).y())
     );
-
+    state_mutex_.lock();
     switch (cur_state_) {
       case moface::eInit:
         prev_state_ = cur_state_;
@@ -270,8 +270,6 @@ void MofaceCalculator::sendObservations(
             face_observation_snapshot_array_.push_back(new_snapshot);
             if (eyes_closed && face_observation_snapshot_array_.size() >= kNumberOfObservationsInFlight) {
                 event_callback_(eBlinkActionDetected);
-
-
                 int last_index = face_observation_snapshot_array_.size() - 1;
                 addBlinkToFaceObservation(
                 reference_snapshot_,
@@ -282,7 +280,7 @@ void MofaceCalculator::sendObservations(
                 face_observation_snapshot_array_.clear();
             } else {
                 if (face_observation_snapshot_array_.size() > kNumberOfObservationsInFlight) {
-                face_observation_snapshot_array_.erase(face_observation_snapshot_array_.begin());
+                    face_observation_snapshot_array_.erase(face_observation_snapshot_array_.begin());
                 }
             }
         }
@@ -359,6 +357,7 @@ void MofaceCalculator::sendObservations(
         break;
     }
     frame_id_ ++;
+    state_mutex_.unlock();
 }
 
 std::string MofaceCalculator::getFaceObservation() {
