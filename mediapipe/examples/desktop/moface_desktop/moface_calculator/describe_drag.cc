@@ -115,7 +115,7 @@ bool hasValidDrag(
   return true;
 }
 
-bool isLeftDrag(
+bool isRightDrag(
     std::vector<moface::FaceObservationSnapShot> const& snapshot_array
 ) {
     double last_yaw = snapshot_array.back().yaw;
@@ -134,7 +134,7 @@ bool isLeftDrag(
     }
 }
 
-bool isRightDrag(
+bool isLeftDrag(
     std::vector<moface::FaceObservationSnapShot> const& snapshot_array
 ) {
     double last_yaw = snapshot_array.back().yaw;

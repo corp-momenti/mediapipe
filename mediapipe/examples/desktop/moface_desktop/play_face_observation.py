@@ -28,7 +28,7 @@ label = pyglet.text.Label('',
                           anchor_x='center', anchor_y='center')
 
 # observation path
-observation_path = "/Users/hoyounkim/Work/Momenti/Research/mediapipe/mediapipe/examples/desktop/moface_desktop/face-observation/fce4a607-29f6-4679-bc02-5b15fd74756b.json"
+observation_path = "/Users/hoyounkim/Work/Momenti/Research/mediapipe/mediapipe/examples/desktop/moface_desktop/face-observation/2e666985-c205-4249-ae6b-52433972bbbe.json"
 
 def display_rotation(action):
 	df = pd.json_normalize(action['feeds'])
