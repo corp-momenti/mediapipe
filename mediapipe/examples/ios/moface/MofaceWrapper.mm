@@ -203,6 +203,25 @@ void geometryNotifier(double pitch, double yaw, double roll, double distance) {
     );
 }
 
+- (void)provideHint:(DetectionHintType) hint {
+    moface::MofaceDetectionHintType type;
+    switch (hint) {
+        case DetectionHintType::HintBlink:
+            type = moface::eDetectBlink;
+            break;
+        case DetectionHintType::HintHappy:
+            type = moface::eDetectHappy;
+            break;
+        case DetectionHintType::HintAngry:
+            type = moface::eDetectAngry;
+            break;
+        default:
+            type = moface::eDetectDrag;
+            break;
+    }
+    self.moface_calculator->setHint(type);
+}
+
 - (void)startGraph {
     // Start running self.mediapipeGraph.
     NSError* error;

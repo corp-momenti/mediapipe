@@ -33,6 +33,13 @@ typedef NS_ENUM(NSUInteger, WarningType) {
     Timeout,
 };
 
+typedef NS_ENUM(NSUInteger, DetectionHintType) {
+    HintDrag,
+    HintBlink,
+    HintHappy,
+    HintAngry
+};
+
 typedef void(^EventCallback)(EventType event);
 typedef void(^WarningCallback)(WarningType warning);
 typedef void(^SignalCallback)(
@@ -45,6 +52,7 @@ typedef void(^SignalCallback)(
 @interface MofaceWrapper : NSObject
     - (nonnull instancetype)init;
     - (void)setCallbacks:(EventCallback)eventCallback signalCallback:(SignalCallback)signalCallback warningCallback:(WarningCallback)warningCallback;
+    - (void)provideHint:(DetectionHintType) hint;
     - (void)feed:(CMSampleBufferRef)sampleBuffer;
     - (nonnull NSString *)stop;
 @end
