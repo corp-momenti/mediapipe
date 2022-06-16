@@ -31,7 +31,7 @@ constexpr int kRightEyeHorzRightEdge = 33;
 constexpr int kRightEyeHorzLeftEdge = 133;
 
 constexpr double kEarThresholdForDeskTop = 0.34;
-constexpr double kEarThresholdForMobile = 0.15;
+constexpr double kEarThresholdForMobile = 0.16;
 
 
 std::tuple<double, double> getLeftEyeCenter(

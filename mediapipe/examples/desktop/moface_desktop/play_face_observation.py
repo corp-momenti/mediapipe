@@ -10,10 +10,10 @@ play_feed_index = 0
 action_selection = 0
 
 # width of window
-width = 640
+width = 1080
 
 # height of window
-height = 480
+height = 1920
 
 # caption i.e title of the window
 title = "PlayActionTest"
@@ -28,7 +28,7 @@ label = pyglet.text.Label('',
                           anchor_x='center', anchor_y='center')
 
 # observation path
-observation_path = "/Users/hoyounkim/Work/Momenti/Research/mediapipe/mediapipe/examples/desktop/moface_desktop/face-observation/2e666985-c205-4249-ae6b-52433972bbbe.json"
+observation_path = "/Users/hoyounkim/Work/Momenti/Research/moface-files/z7e6Gb9TbtxbONHd-WvP-Q==.txt"
 
 def display_rotation(action):
 	df = pd.json_normalize(action['feeds'])

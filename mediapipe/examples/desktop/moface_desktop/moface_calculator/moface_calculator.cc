@@ -135,7 +135,7 @@ void MofaceCalculator::sendObservations(
       distance_status,
       pose_status,
       withinFrame,
-      cv::Point(landmarks.landmark(0).x(), landmarks.landmark(0).y())
+      cv::Point(landmarks.landmark(1).x(), landmarks.landmark(1).y())
     );
     state_mutex_.lock();
     switch (cur_state_) {
@@ -145,10 +145,13 @@ void MofaceCalculator::sendObservations(
         face_observation_snapshot_array_.clear();
         break;
       case moface::eStart:
-        if (isReferenceFrame(pitch, yaw, roll)) {
+        if (isReferenceFrame(pitch, yaw, roll) &&
+            withinFrame &&
+            distance_status == eGoodDistance
+        ) {
           event_callback_(moface::eReferenceDetected);
           reference_snapshot_ = {
-            .timestamp = 1000.0 * frame_id_ / 30.0, //geometry_packet.Timestamp().Seconds(),
+            .timestamp = feed_time_list_[0], //geometry_packet.Timestamp().Seconds(),
             .frame_id = frame_id_,
             .pitch = pitch,
             .roll = roll,
@@ -163,16 +166,10 @@ void MofaceCalculator::sendObservations(
         if (distance_status != eGoodDistance) {
           prev_state_ = cur_state_;
           cur_state_ = moface::eNop;
-        } else if (!withinFrame) {
-          prev_state_ = cur_state_;
-          cur_state_ = moface::eNop;
         } else if (pose_status == eMoving) {
-          // std::cout << "pitch : " << pitch << std::endl;
-          // std::cout << "yaw : " << yaw << std::endl;
-          // std::cout << "roll : " << roll << std::endl;
           face_observation_snapshot_array_.clear();
           moface::FaceObservationSnapShot new_snapshot = {
-            .timestamp = 1000.0 * frame_id_ / 30.0, //geometry_packet.Timestamp().Seconds(),
+            .timestamp = feed_time_list_[0], //geometry_packet.Timestamp().Seconds(),
             .frame_id = frame_id_,
             .pitch = pitch,
             .roll = roll,
@@ -186,20 +183,14 @@ void MofaceCalculator::sendObservations(
         }
         break;
       case moface::eDragTracking:
-        if (distance_status != eGoodDistance) {
-          prev_state_ = cur_state_;
-          cur_state_ = moface::eNop;
-        } else if (!withinFrame) {
-          prev_state_ = cur_state_;
-          cur_state_ = moface::eNop;
-        } else if (pose_status == eHoldStill) {
+        if (pose_status == eHoldStill) {
           prev_state_ = cur_state_;
           cur_state_ = moface::eReady;
           face_observation_snapshot_array_.clear();
         } else if (pose_status == eMoving) {
           if (hitDragLimit(pitch, yaw, roll)) {
             moface::FaceObservationSnapShot new_snapshot = {
-              .timestamp = 1000.0 * frame_id_ / 30.0, //geometry_packet.Timestamp().Seconds(),
+              .timestamp = feed_time_list_[0], //geometry_packet.Timestamp().Seconds(),
               .frame_id = frame_id_,
               .pitch = pitch,
               .roll = roll,
@@ -234,7 +225,7 @@ void MofaceCalculator::sendObservations(
             cur_state_ = moface::eNop;
           } else {
             moface::FaceObservationSnapShot new_snapshot = {
-              .timestamp = 1000.0 * frame_id_ / 30.0, //geometry_packet.Timestamp().Seconds(),
+              .timestamp = feed_time_list_[0], //geometry_packet.Timestamp().Seconds(),
               .frame_id = frame_id_,
               .pitch = pitch,
               .roll = roll,
@@ -242,25 +233,16 @@ void MofaceCalculator::sendObservations(
             };
             new_snapshot.landmarks = landmarks;
             face_observation_snapshot_array_.push_back(new_snapshot);
-            //todo
-            // if (dragGoingBackward(face_observation_snapshot_array_)) {
-            //   face_observation_snapshot_array_.pop_back();
-            //   std::cout << "going backward pop back!!!" << std::endl;
-            //   //warning_callback_(moface::eGoingBackward);
-            // } else if (dragTooSlow(face_observation_snapshot_array_)) {
-            //   face_observation_snapshot_array_.pop_back();
-            //   std::cout << "too slow pop back!!!" << std::endl;
-            //   //warning_callback_(moface::eTooSlow);
-            // }
           }
         } else {
           assertm(false, "invalid case in tracking state");
         }
         break;
       case moface::eCheckingEyes:
+        //std::cout << "checking eyes " << std::endl;
         if (pose_status == eHoldStill) {
             moface::FaceObservationSnapShot new_snapshot = {
-                .timestamp = 1000.0 * frame_id_ / 30.0, //geometry_packet.Timestamp().Seconds(),
+                .timestamp = feed_time_list_[0], //geometry_packet.Timestamp().Seconds(),
                 .frame_id = frame_id_,
                 .pitch = pitch,
                 .roll = roll,
@@ -271,37 +253,10 @@ void MofaceCalculator::sendObservations(
             if (eyes_closed && face_observation_snapshot_array_.size() >= kNumberOfObservationsInFlight) {
                 event_callback_(eBlinkActionDetected);
                 int last_index = face_observation_snapshot_array_.size() - 1;
+                face_observation_snapshot_array_.insert(face_observation_snapshot_array_.begin() + (last_index - 5), reference_snapshot_);
                 addBlinkToFaceObservation(
-                reference_snapshot_,
-                std::make_tuple(last_index - 5, last_index),
-                face_observation_snapshot_array_,
-                face_observation_object_
-                );
-                face_observation_snapshot_array_.clear();
-            } else {
-                if (face_observation_snapshot_array_.size() > kNumberOfObservationsInFlight) {
-                    face_observation_snapshot_array_.erase(face_observation_snapshot_array_.begin());
-                }
-            }
-        }
-        break;
-      case moface::eCheckingAngry:
-        if (pose_status == eHoldStill) {
-            moface::FaceObservationSnapShot new_snapshot = {
-                .timestamp = 1000.0 * frame_id_ / 30.0, //geometry_packet.Timestamp().Seconds(),
-                .frame_id = frame_id_,
-                .pitch = pitch,
-                .roll = roll,
-                .yaw = yaw
-            };
-            new_snapshot.landmarks = landmarks;
-            face_observation_snapshot_array_.push_back(new_snapshot);
-            if (angry_mouth && face_observation_snapshot_array_.size() >= kNumberOfObservationsInFlight) {
-                event_callback_(eAngryActionDetected);
-                int last_index = face_observation_snapshot_array_.size() - 1;
-                addAngryActionToFaceObservation(
                     reference_snapshot_,
-                    std::make_tuple(last_index - 5, last_index),
+                    std::make_tuple(last_index - 2, last_index),
                     face_observation_snapshot_array_,
                     face_observation_object_
                 );
@@ -311,12 +266,44 @@ void MofaceCalculator::sendObservations(
                     face_observation_snapshot_array_.erase(face_observation_snapshot_array_.begin());
                 }
             }
+        } else {
+            std::cout << "ignore eyes due to poses " << std::endl;
+        }
+        break;
+      case moface::eCheckingAngry:
+        {
+            moface::FaceObservationSnapShot new_snapshot = {
+                .timestamp = feed_time_list_[0], //geometry_packet.Timestamp().Seconds(),
+                .frame_id = frame_id_,
+                .pitch = pitch,
+                .roll = roll,
+                .yaw = yaw
+            };
+            new_snapshot.landmarks = landmarks;
+            face_observation_snapshot_array_.push_back(new_snapshot);
+            if (angry_mouth && face_observation_snapshot_array_.size() >= kNumberOfObservationsInFlight) {
+                int last_index = face_observation_snapshot_array_.size() - 1;
+                face_observation_snapshot_array_.insert(face_observation_snapshot_array_.begin() + (last_index - 5), reference_snapshot_);
+                addAngryActionToFaceObservation(
+                    reference_snapshot_,
+                    std::make_tuple(last_index - 5, last_index),
+                    face_observation_snapshot_array_,
+                    face_observation_object_
+                );
+                face_observation_snapshot_array_.clear();
+                event_callback_(eAngryActionDetected);
+            } else {
+                if (face_observation_snapshot_array_.size() > kNumberOfObservationsInFlight) {
+                    face_observation_snapshot_array_.erase(face_observation_snapshot_array_.begin());
+                }
+            }
         }
         break;
       case moface::eCheckingHappy:
-        if (pose_status == eHoldStill) {
+        {
+            //std::cout << "checking happy : " << calculateMWAR2(reference_snapshot_.landmarks, landmarks) << std::endl;
             moface::FaceObservationSnapShot new_snapshot = {
-                .timestamp = 1000.0 * frame_id_ / 30.0, //geometry_packet.Timestamp().Seconds(),
+                .timestamp = feed_time_list_[0], //geometry_packet.Timestamp().Seconds(),
                 .frame_id = frame_id_,
                 .pitch = pitch,
                 .roll = roll,
@@ -327,6 +314,7 @@ void MofaceCalculator::sendObservations(
             if (happy_mouth && face_observation_snapshot_array_.size() >= kNumberOfObservationsInFlight) {
                 event_callback_(eHappyActionDetected);
                 int last_index = face_observation_snapshot_array_.size() - 1;
+                face_observation_snapshot_array_.insert(face_observation_snapshot_array_.begin() + (last_index - 5), reference_snapshot_);
                 addHappyActionToFaceObservation(
                     reference_snapshot_,
                     std::make_tuple(last_index - 5, last_index),
@@ -344,8 +332,8 @@ void MofaceCalculator::sendObservations(
       case moface::eNop:
         if (
           distance_status == eGoodDistance &&
-          pose_status == eHoldStill &&
-          withinFrame
+          pose_status == eHoldStill /*&&
+          withinFrame*/
         ) {
           prev_state_ = cur_state_;
           cur_state_ = moface::eReady;
@@ -357,13 +345,16 @@ void MofaceCalculator::sendObservations(
         break;
     }
     frame_id_ ++;
+    feed_time_list_.erase(feed_time_list_.begin());
     state_mutex_.unlock();
 }
 
 std::string MofaceCalculator::getFaceObservation() {
+    state_mutex_.lock();
     rapidjson::StringBuffer sb;
     rapidjson::PrettyWriter<rapidjson::StringBuffer> json_writer(sb);
     face_observation_object_->serialize(json_writer);
+    state_mutex_.unlock();
     return sb.GetString();
 }
 
@@ -372,9 +363,12 @@ std::string MofaceCalculator::curState() {
 }
 
 void MofaceCalculator::reset() {
+    state_mutex_.lock();
     prev_state_ = moface::eInit;
     cur_state_ = moface::eInit;
     frame_id_ = 0;
+    feed_time_list_.clear();
+    state_mutex_.unlock();
 }
 
 void MofaceCalculator::updateMediaFilePath(std::string &file_path) {

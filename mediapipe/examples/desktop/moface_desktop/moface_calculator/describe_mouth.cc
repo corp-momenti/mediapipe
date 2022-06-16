@@ -44,7 +44,7 @@ constexpr double kMHARThesholdForDesktop = 13.0;
 constexpr double kMHARThesholdForMobile = 16.0;
 constexpr int kNumOfObservationsToCheck = 10;
 constexpr double kMWARTheshold = 100.0;
-constexpr double kMWAR2ThesholdForMobile = 33.0;
+constexpr double kMWAR2ThesholdForMobile = 30.0;
 constexpr double kMWAR2ThesholdForDesktop = 13.0;
 constexpr double kMWARReferece = 40.0;
 

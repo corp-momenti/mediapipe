@@ -35,6 +35,8 @@ constexpr int kLowestLandmark = 0;
 constexpr int kRightMostLandmark = 0;
 constexpr int kLeftMostLandmark = 0;
 
+constexpr double kCenterRange = 50.0;
+
 bool isReferenceFrame(
   double pitch,
   double yaw,
@@ -117,14 +119,34 @@ bool isWithinFrame(
   double width, double height,
   ::mediapipe::NormalizedLandmarkList const& landmarks
 ) {
-  //todo
-  return true;
-  /*if (kMinFrameInY < landmarks.landmark(kHightLandmark).y() &&
-      kMaxFrameInY > landmarks.landmark(kLowestLandmark).y() &&
-      kMinFrameInX < landmarks.landmark(kRightMostLandmark).x() &&
-      kMaxFrameInX > landmarks.landmark(kLeftMostLandmark).x()
-  ) {
+  double frame_center_x, frame_center_y;
+  if (width < height) {
+    double left_x = 0.0;
+    double left_y = (height - width) * 0.5;
+    double frame_width = width;
+    double frame_height = width;
+    frame_center_x = width * 0.5;
+    frame_center_y = (left_y + left_y + frame_height) * 0.5;
+  } else if (width > height) {
+    double left_x = (width - height) * 0.5;
+    double left_y = 0.0;
+    double frame_width = height;
+    double frame_height = height;
+    frame_center_x = (left_x + left_x + frame_width) * 0.5;
+    frame_center_y = height * 0.5;
+  } else { // width == height
+    frame_center_x = width * 0.5;
+    frame_center_y = height * 0.5;
+  }
+
+  double nose_tip_x = landmarks.landmark(4).x() * width;
+  double nose_tip_y = landmarks.landmark(4).y() * height;
+
+  if ((nose_tip_x >= frame_center_x - kCenterRange && nose_tip_x <= frame_center_x + kCenterRange) &&
+     (nose_tip_y >= frame_center_y && nose_tip_y <= frame_center_y + 2 * kCenterRange))
+  {
     return true;
   }
-  return false;*/
+
+  return false;
 }

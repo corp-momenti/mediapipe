@@ -75,7 +75,7 @@ namespace moface {
             void setResolution(double width, double height);
             void setHint(MofaceDetectionHintType hint) {
                 state_mutex_.lock();
-                std::cout << "!! cur state : " << cur_state_ << ", prev stats: " << prev_state_ << std::endl;
+                //std::cout << "!! cur state : " << cur_state_ << ", prev stats: " << prev_state_ << std::endl;
                 switch (hint) {
                     case eDetectBlink:
                         prev_state_ = cur_state_;
@@ -96,7 +96,13 @@ namespace moface {
                     default:
                         break;
                 }
-                std::cout << "!! cur state : " << cur_state_ << ", prev stats: " << prev_state_ << std::endl;
+                //std::cout << "!! cur state : " << cur_state_ << ", prev stats: " << prev_state_ << std::endl;
+                state_mutex_.unlock();
+            }
+            void feed_time(double timestamp) {
+                state_mutex_.lock();
+                //std::cout << "timestamp : " << timestamp << std::endl;
+                feed_time_list_.push_back(timestamp);
                 state_mutex_.unlock();
             }
             void sendObservations(const ::mediapipe::NormalizedLandmarkList &landmarks, const ::mediapipe::face_geometry::FaceGeometry &geometry);
@@ -116,6 +122,7 @@ namespace moface {
             int frame_id_;
             double width_;
             double height_;
+            std::vector<double> feed_time_list_;
             std::mutex state_mutex_;
     };
 }

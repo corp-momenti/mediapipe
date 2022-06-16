@@ -31,6 +31,8 @@ static SignalCallback signalCallback_;
 
 @interface MofaceWrapper() <MPPGraphDelegate>
 
+@property (nonatomic) bool set_start_time;
+@property (nonatomic) CMTime start_time;
 @property (nonatomic) MPPGraph* mediapipeGraph;
 @property (nonatomic) moface::MofaceCalculator* moface_calculator;
 
@@ -179,15 +181,14 @@ void geometryNotifier(double pitch, double yaw, double roll, double distance) {
 {
     self = [super init];
     if (self) {
-
         dispatch_queue_attr_t qosAttribute = dispatch_queue_attr_make_with_qos_class(
              DISPATCH_QUEUE_SERIAL, QOS_CLASS_USER_INTERACTIVE, /*relative_priority=*/0);
         _videoQueue = dispatch_queue_create(kVideoQueueLabel, qosAttribute);
-
+        self.set_start_time = true;
         self.mediapipeGraph = [[self class] loadGraphFromResource:kGraphName];
         self.mediapipeGraph.delegate = self;
         // Set maxFramesInFlight to a small value to avoid memory contention for real-time processing.
-        self.mediapipeGraph.maxFramesInFlight = 10;
+        self.mediapipeGraph.maxFramesInFlight = 2;
         [self startGraph];
         NSLog(@"Initilaized MofaceFramework!!!");
     }
@@ -329,6 +330,11 @@ void geometryNotifier(double pitch, double yaw, double roll, double distance) {
 - (void)feed:(CMSampleBufferRef)sampleBuffer {
     CVPixelBufferRef imageBuffer = CMSampleBufferGetImageBuffer(sampleBuffer);
     CMTime timestamp = CMSampleBufferGetPresentationTimeStamp(sampleBuffer);
+    if (self.set_start_time) {
+        self.start_time = timestamp;
+        self.set_start_time = false;
+    }
+    self.moface_calculator->feed_time((CMTimeGetSeconds(timestamp) - CMTimeGetSeconds(self.start_time)) * 1000.0);
     mediapipe::Timestamp graphTimestamp(static_cast<mediapipe::TimestampBaseType>(
         mediapipe::Timestamp::kTimestampUnitsPerSecond * CMTimeGetSeconds(timestamp)));
     if (![self.mediapipeGraph sendPixelBuffer:imageBuffer
@@ -342,6 +348,7 @@ void geometryNotifier(double pitch, double yaw, double roll, double distance) {
 - (NSString *)stop {
     NSString *ret_string = [NSString stringWithCString:self.moface_calculator->getFaceObservation().c_str()];
     self.moface_calculator->reset();
+    self.set_start_time = true;
     return ret_string;
 }
 

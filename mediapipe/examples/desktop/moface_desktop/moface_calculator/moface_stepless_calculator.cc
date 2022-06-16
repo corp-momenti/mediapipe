@@ -137,7 +137,10 @@ void MofaceCalculator::sendObservations(
         //face_observation_object_ = NULL;
         break;
       case moface::eStart:
-        if (isReferenceFrame(pitch, yaw, roll)) {
+        if (isReferenceFrame(pitch, yaw, roll) &&
+            withinFrame &&
+            distance_status == eGoodDistance
+        ) {
           event_callback_(moface::eReferenceDetected);
           reference_snapshot_ = {
             .timestamp = 1000.0 * frame_id_ / 30.0, //geometry_packet.Timestamp().Seconds(),
