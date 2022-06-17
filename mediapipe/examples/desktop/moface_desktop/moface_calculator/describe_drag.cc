@@ -222,7 +222,7 @@ void addDragToFaceObservation(
     moface::ObservationAction *new_action = new moface::ObservationAction("drag", desc, 0.0, 0.0, 1080.0, 1920.0);
     int delta_index = 0;
     for (auto snapshot : snapshot_array) {
-      moface::ObservationFeed *new_feed = new moface::ObservationFeed(snapshot.timestamp, snapshot.pitch, snapshot.yaw, snapshot.roll);
+      moface::ObservationFeed *new_feed = new moface::ObservationFeed(1000.0 * snapshot.frame_id / 30.0/*snapshot.timestamp*/, snapshot.pitch, snapshot.yaw, snapshot.roll);
       double x, y;
       if (drag_face_type == eDragLeft) {
         double delta =

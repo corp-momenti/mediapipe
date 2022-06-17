@@ -21,6 +21,7 @@ static const char* kOutputStream = "output_video";
 
 static const char* kMultiFaceGeometryStream = "multi_face_geometry";
 static const char* kMultiFaceLandmark = "multi_smoothed_face_landmarks";
+static const char* kAllowStream = "allowed_timestamps";
 static const char* kVideoQueueLabel = "com.google.mediapipe.example.videoQueue";
 
 static const int kMatrixTranslationZIndex = 14;
@@ -82,6 +83,7 @@ static SignalCallback signalCallback_;
     [newGraph addFrameOutputStream:kOutputStream outputPacketType:MPPPacketTypePixelBuffer];
     [newGraph addFrameOutputStream:kMultiFaceGeometryStream outputPacketType:MPPPacketTypeRaw];
     [newGraph addFrameOutputStream:kMultiFaceLandmark outputPacketType:MPPPacketTypeRaw];
+    [newGraph addFrameOutputStream:kAllowStream outputPacketType:MPPPacketTypeRaw];
     return newGraph;
 }
 
@@ -253,6 +255,9 @@ void geometryNotifier(double pitch, double yaw, double roll, double distance) {
 - (void)mediapipeGraph:(MPPGraph*)graph
      didOutputPacket:(const ::mediapipe::Packet&)packet
           fromStream:(const std::string&)streamName {
+    if (streamName == kAllowStream) {
+        auto allow = packet.Get<bool>();
+    }
     if (streamName == kMultiFaceLandmark) {
         if (packet.IsEmpty()) {
           NSLog(@"[TS:%lld] No face landmarks", packet.Timestamp().Value());

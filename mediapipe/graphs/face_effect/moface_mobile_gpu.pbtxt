@@ -37,6 +37,16 @@ node {
     back_edge: true
   }
   output_stream: "throttled_input_video"
+  output_stream: "ALLOW:allowed_timestamps"
+  node_options: {
+    [type.googleapis.com/mediapipe.FlowLimiterCalculatorOptions] {
+      max_in_flight: 1
+      max_in_queue: 1
+      # Timeout is disabled (set to 0) as first frame processing can take more
+      # than 1 second.
+      in_flight_timeout: 0
+    }
+  }
 }
 
 # Generates an environment that describes the current virtual scene.

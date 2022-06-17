@@ -112,7 +112,7 @@ void addBlinkToFaceObservation(
     for (auto snapshot : snapshot_array) {
       moface::ObservationFeed *new_feed =
         new moface::ObservationFeed(
-          snapshot.timestamp, snapshot.pitch, snapshot.yaw, snapshot.roll
+          1000.0 * snapshot.frame_id / 30.0 /*snapshot.timestamp*/, snapshot.pitch, snapshot.yaw, snapshot.roll
         );
       moface::ObservationTrackedPosition *new_track =
         new moface::ObservationTrackedPosition(
@@ -137,7 +137,7 @@ void addBlinkToFaceObservation(
     for (auto snapshot : snapshot_array) {
       moface::ObservationFeed *new_feed =
         new moface::ObservationFeed(
-          snapshot.timestamp, snapshot.pitch, snapshot.yaw, snapshot.roll
+          1000.0 * snapshot.frame_id / 30.0 /*snapshot.timestamp*/, snapshot.pitch, snapshot.yaw, snapshot.roll
         );
       moface::ObservationTrackedPosition *new_track =
         new moface::ObservationTrackedPosition(

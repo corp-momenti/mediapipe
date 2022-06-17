@@ -91,7 +91,7 @@ void addAngryActionToFaceObservation(
     for (int i = std::get<0>(slice); i <= std::get<1>(slice); i ++) {
       auto snapshot = snapshot_array[i];
       moface::ObservationFeed *new_feed =
-        new moface::ObservationFeed(snapshot.timestamp, snapshot.pitch, snapshot.yaw, snapshot.roll);
+        new moface::ObservationFeed(1000.0 * snapshot.frame_id / 30.0 /*snapshot.timestamp*/, snapshot.pitch, snapshot.yaw, snapshot.roll);
       double up_x, up_y, down_x, down_y;
       if (i == std::get<0>(slice)) {
         //0, 17
@@ -203,7 +203,7 @@ void addHappyActionToFaceObservation(
     for (int i = std::get<0>(slice); i <= std::get<1>(slice); i ++) {
       auto snapshot = snapshot_array[i];
       moface::ObservationFeed *new_feed =
-        new moface::ObservationFeed(snapshot.timestamp, snapshot.pitch, snapshot.yaw, snapshot.roll);
+        new moface::ObservationFeed(1000.0 * snapshot.frame_id / 30.0 /*snapshot.timestamp*/, snapshot.pitch, snapshot.yaw, snapshot.roll);
       double right_x, right_y, left_x, left_y;
       if (i == std::get<0>(slice)) {
         //61, 291
