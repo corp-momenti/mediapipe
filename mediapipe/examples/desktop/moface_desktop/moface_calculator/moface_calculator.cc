@@ -253,7 +253,7 @@ void MofaceCalculator::sendObservations(
             if (eyes_closed && face_observation_snapshot_array_.size() >= kNumberOfObservationsInFlight) {
                 event_callback_(eBlinkActionDetected);
                 int last_index = face_observation_snapshot_array_.size() - 1;
-                face_observation_snapshot_array_.insert(face_observation_snapshot_array_.begin() + (last_index - 5), reference_snapshot_);
+                face_observation_snapshot_array_.insert(face_observation_snapshot_array_.begin() + (last_index - 2), reference_snapshot_);
                 addBlinkToFaceObservation(
                     reference_snapshot_,
                     std::make_tuple(last_index - 2, last_index),
@@ -283,10 +283,10 @@ void MofaceCalculator::sendObservations(
             face_observation_snapshot_array_.push_back(new_snapshot);
             if (angry_mouth && face_observation_snapshot_array_.size() >= kNumberOfObservationsInFlight) {
                 int last_index = face_observation_snapshot_array_.size() - 1;
-                face_observation_snapshot_array_.insert(face_observation_snapshot_array_.begin() + (last_index - 5), reference_snapshot_);
+                face_observation_snapshot_array_.insert(face_observation_snapshot_array_.begin() + (last_index - 10), reference_snapshot_);
                 addAngryActionToFaceObservation(
                     reference_snapshot_,
-                    std::make_tuple(last_index - 5, last_index),
+                    std::make_tuple(last_index - 10, last_index),
                     face_observation_snapshot_array_,
                     face_observation_object_
                 );
@@ -314,10 +314,10 @@ void MofaceCalculator::sendObservations(
             if (happy_mouth && face_observation_snapshot_array_.size() >= kNumberOfObservationsInFlight) {
                 event_callback_(eHappyActionDetected);
                 int last_index = face_observation_snapshot_array_.size() - 1;
-                face_observation_snapshot_array_.insert(face_observation_snapshot_array_.begin() + (last_index - 5), reference_snapshot_);
+                face_observation_snapshot_array_.insert(face_observation_snapshot_array_.begin() + (last_index - 10), reference_snapshot_);
                 addHappyActionToFaceObservation(
                     reference_snapshot_,
-                    std::make_tuple(last_index - 5, last_index),
+                    std::make_tuple(last_index - 10, last_index),
                     face_observation_snapshot_array_,
                     face_observation_object_
                 );
@@ -367,6 +367,8 @@ void MofaceCalculator::reset() {
     prev_state_ = moface::eInit;
     cur_state_ = moface::eInit;
     frame_id_ = 0;
+    face_observation_object_ = new moface::FaceObservation("");
+    face_observation_snapshot_array_.clear();
     feed_time_list_.clear();
     state_mutex_.unlock();
 }

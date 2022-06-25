@@ -91,7 +91,7 @@ void addAngryActionToFaceObservation(
     for (int i = std::get<0>(slice); i <= std::get<1>(slice); i ++) {
       auto snapshot = snapshot_array[i];
       moface::ObservationFeed *new_feed =
-        new moface::ObservationFeed(1000.0 * snapshot.frame_id / 30.0 /*snapshot.timestamp*/, snapshot.pitch, snapshot.yaw, snapshot.roll);
+        new moface::ObservationFeed(1000.0 * snapshot.frame_id / 60.0 /*snapshot.timestamp*/, snapshot.pitch, snapshot.yaw, snapshot.roll);
       double up_x, up_y, down_x, down_y;
       if (i == std::get<0>(slice)) {
         //0, 17
@@ -133,7 +133,7 @@ bool checkAngryActionAndAddToFaceObservation(
     double mar = calculateMHAR(snapshot_array[i].landmarks);
     mar_history.push_back(mar);
     if (mar > kMHARThesholdForMobile && i > kNumOfObservationsToCheck) {
-      slices.push_back(std::make_tuple(i - 10, i));
+      slices.push_back(std::make_tuple(i - 20, i));
       // for (int j = i - 1; j >= 0; j --) {
       //   if (mar_history[j] <= reference_mar) {
       //     slices.push_back(std::make_tuple(j, i));
@@ -203,7 +203,7 @@ void addHappyActionToFaceObservation(
     for (int i = std::get<0>(slice); i <= std::get<1>(slice); i ++) {
       auto snapshot = snapshot_array[i];
       moface::ObservationFeed *new_feed =
-        new moface::ObservationFeed(1000.0 * snapshot.frame_id / 30.0 /*snapshot.timestamp*/, snapshot.pitch, snapshot.yaw, snapshot.roll);
+        new moface::ObservationFeed(1000.0 * snapshot.frame_id / 60.0 /*snapshot.timestamp*/, snapshot.pitch, snapshot.yaw, snapshot.roll);
       double right_x, right_y, left_x, left_y;
       if (i == std::get<0>(slice)) {
         //61, 291
@@ -246,7 +246,7 @@ bool checkHanppyActionAndAddToFaceObservation(
     mar_history.push_back(mar2ref);
     //std::cout << "mwar2 : " << mar2ref << std::endl;;
     if (mar2ref >= kMWAR2ThesholdForMobile && i > kNumOfObservationsToCheck) {
-      slices.push_back(std::make_tuple(i - 10, i));
+      slices.push_back(std::make_tuple(i - 20, i));
       //todo
       // for (int j = i - 1; j >= 0; j --) {
       //   if (mar_history[j] <= kMWARReferece) {

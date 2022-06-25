@@ -59,9 +59,11 @@ objc_library(
     name = "MofaceWrapper",
     srcs = [
         "MofaceWrapper.mm",
+        "MOImageConverter.mm"
     ],
     hdrs = [
         "MofaceWrapper.h",
+        "MOImageConverter.h"
     ],
     copts = ["-std=c++17"],
     data = [

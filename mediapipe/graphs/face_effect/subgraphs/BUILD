@@ -74,6 +74,9 @@ mediapipe_simple_subgraph(
         "//mediapipe/modules/face_geometry:face_geometry_from_landmarks",
         "//mediapipe/modules/face_landmark:face_landmark_front_gpu",
         "//mediapipe/graphs/face_mesh/subgraphs:face_renderer_gpu",
+        "//mediapipe/graphs/face_effect/subgraphs:single_face_geometry_from_detection_gpu",
+        "//mediapipe/graphs/face_effect/subgraphs:single_face_geometry_from_landmarks_gpu",
+        "//mediapipe/modules/face_geometry:effect_renderer_calculator",
     ],
 )
 

@@ -109,10 +109,11 @@ void addBlinkToFaceObservation(
         (double)std::get<3>(left_eye_area)
       );
     std::tuple<double, double> left_eye_center = getLeftEyeCenter(reference.landmarks);
-    for (auto snapshot : snapshot_array) {
+    for (int i = std::get<0>(slice); i <= std::get<1>(slice); i ++) {
+      auto snapshot = snapshot_array[i];
       moface::ObservationFeed *new_feed =
         new moface::ObservationFeed(
-          1000.0 * snapshot.frame_id / 30.0 /*snapshot.timestamp*/, snapshot.pitch, snapshot.yaw, snapshot.roll
+          1000.0 * snapshot.frame_id / 60.0 /*snapshot.timestamp*/, snapshot.pitch, snapshot.yaw, snapshot.roll
         );
       moface::ObservationTrackedPosition *new_track =
         new moface::ObservationTrackedPosition(
@@ -134,10 +135,11 @@ void addBlinkToFaceObservation(
         (double)std::get<3>(right_eye_area)
       );
     std::tuple<double, double> right_eye_center = getRightEyeCenter(reference.landmarks);
-    for (auto snapshot : snapshot_array) {
+    for (int i = std::get<0>(slice); i <= std::get<1>(slice); i ++) {
+      auto snapshot = snapshot_array[i];
       moface::ObservationFeed *new_feed =
         new moface::ObservationFeed(
-          1000.0 * snapshot.frame_id / 30.0 /*snapshot.timestamp*/, snapshot.pitch, snapshot.yaw, snapshot.roll
+          1000.0 * snapshot.frame_id / 60.0 /*snapshot.timestamp*/, snapshot.pitch, snapshot.yaw, snapshot.roll
         );
       moface::ObservationTrackedPosition *new_track =
         new moface::ObservationTrackedPosition(

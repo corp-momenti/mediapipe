@@ -117,24 +117,24 @@ class EffectRendererCalculator : public CalculatorBase {
       MP_RETURN_IF_ERROR(face_geometry::ValidateEnvironment(environment))
           << "Invalid environment!";
 
-      absl::optional<face_geometry::Mesh3d> effect_mesh_3d;
-      if (options.has_effect_mesh_3d_path()) {
-        ASSIGN_OR_RETURN(effect_mesh_3d,
-                         ReadMesh3dFromFile(options.effect_mesh_3d_path()),
-                         _ << "Failed to read the effect 3D mesh from file!");
+      // absl::optional<face_geometry::Mesh3d> effect_mesh_3d;
+      // if (options.has_effect_mesh_3d_path()) {
+      //   ASSIGN_OR_RETURN(effect_mesh_3d,
+      //                    ReadMesh3dFromFile(options.effect_mesh_3d_path()),
+      //                    _ << "Failed to read the effect 3D mesh from file!");
 
-        MP_RETURN_IF_ERROR(face_geometry::ValidateMesh3d(*effect_mesh_3d))
-            << "Invalid effect 3D mesh!";
-      }
+      //   MP_RETURN_IF_ERROR(face_geometry::ValidateMesh3d(*effect_mesh_3d))
+      //       << "Invalid effect 3D mesh!";
+      // }
 
-      ASSIGN_OR_RETURN(ImageFrame effect_texture,
-                       ReadTextureFromFile(options.effect_texture_path()),
-                       _ << "Failed to read the effect texture from file!");
+      // ASSIGN_OR_RETURN(ImageFrame effect_texture,
+      //                  ReadTextureFromFile(options.effect_texture_path()),
+      //                  _ << "Failed to read the effect texture from file!");
 
-      ASSIGN_OR_RETURN(effect_renderer_,
-                       CreateEffectRenderer(environment, effect_mesh_3d,
-                                            std::move(effect_texture)),
-                       _ << "Failed to create the effect renderer!");
+      // ASSIGN_OR_RETURN(effect_renderer_,
+      //                  CreateEffectRenderer(environment, effect_mesh_3d,
+      //                                       std::move(effect_texture)),
+      //                  _ << "Failed to create the effect renderer!");
 
       return absl::OkStatus();
     });
@@ -173,15 +173,17 @@ class EffectRendererCalculator : public CalculatorBase {
             << "Invalid face geometry!";
       }
 
-      MP_RETURN_IF_ERROR(effect_renderer_->RenderEffect(
-          multi_face_geometry, input_gl_texture.width(),
-          input_gl_texture.height(), input_gl_texture.target(),
-          input_gl_texture.name(), output_gl_texture.target(),
-          output_gl_texture.name()))
-          << "Failed to render the effect!";
+      // MP_RETURN_IF_ERROR(effect_renderer_->RenderEffect(
+      //     multi_face_geometry, input_gl_texture.width(),
+      //     input_gl_texture.height(), input_gl_texture.target(),
+      //     input_gl_texture.name(), output_gl_texture.target(),
+      //     output_gl_texture.name()))
+      //     << "Failed to render the effect!";
 
+      // std::unique_ptr<GpuBuffer> output_gpu_buffer =
+      //     output_gl_texture.GetFrame<GpuBuffer>();
       std::unique_ptr<GpuBuffer> output_gpu_buffer =
-          output_gl_texture.GetFrame<GpuBuffer>();
+        input_gl_texture.GetFrame<GpuBuffer>();
 
       cc->Outputs()
           .Tag(kImageGpuTag)

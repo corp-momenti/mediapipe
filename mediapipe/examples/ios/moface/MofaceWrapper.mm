@@ -1,5 +1,6 @@
 
 #import "MofaceWrapper.h"
+#import "MOImageConverter.h"
 
 //#import "mediapipe/objc/MPPCameraInputSource.h"
 #import "mediapipe/objc/MPPGraph.h"
@@ -30,8 +31,13 @@ static EventCallback eventCallback_;
 static WarningCallback warningCallback_;
 static SignalCallback signalCallback_;
 
+@implementation DetectionResult
+@end
+
 @interface MofaceWrapper() <MPPGraphDelegate>
 
+@property (nonatomic) NSString *asset_path;
+@property (nonatomic) NSString *source_file_path;
 @property (nonatomic) bool set_start_time;
 @property (nonatomic) CMTime start_time;
 @property (nonatomic) MPPGraph* mediapipeGraph;
@@ -40,21 +46,20 @@ static SignalCallback signalCallback_;
 @property (nonatomic) std::vector<::mediapipe::NormalizedLandmarkList> multi_face_landmarks;
 @property (nonatomic) std::vector<::mediapipe::face_geometry::FaceGeometry> multi_face_geometry;
 
+@property (atomic) bool is_running;
+
 @end
 
 @implementation MofaceWrapper {
     /// Process camera frames on this queue.
     dispatch_queue_t _videoQueue;
+    cv::VideoWriter _writer;
 }
 
 #pragma mark - Cleanup methods
 
 - (void)dealloc {
-    self.mediapipeGraph.delegate = nil;
-    [self.mediapipeGraph cancel];
-    // Ignore errors since we're cleaning up.
-    [self.mediapipeGraph closeAllInputStreamsWithError:nil];
-    [self.mediapipeGraph waitUntilDoneWithError:nil];
+    [self stopGraph];
 }
 
 #pragma mark - MediaPipe graph methods
@@ -179,7 +184,7 @@ void geometryNotifier(double pitch, double yaw, double roll, double distance) {
 
 }
 
-- (instancetype)init
+- (nonnull instancetype)initWithAssetsPath:(NSString *) assetPath;
 {
     self = [super init];
     if (self) {
@@ -190,8 +195,10 @@ void geometryNotifier(double pitch, double yaw, double roll, double distance) {
         self.mediapipeGraph = [[self class] loadGraphFromResource:kGraphName];
         self.mediapipeGraph.delegate = self;
         // Set maxFramesInFlight to a small value to avoid memory contention for real-time processing.
-        self.mediapipeGraph.maxFramesInFlight = 2;
+        self.mediapipeGraph.maxFramesInFlight = 12;
+        self.asset_path = assetPath;
         [self startGraph];
+        self.is_running = true;
         NSLog(@"Initilaized MofaceFramework!!!");
     }
     return self;
@@ -234,6 +241,16 @@ void geometryNotifier(double pitch, double yaw, double roll, double distance) {
     }
 }
 
+- (void)stopGraph {
+    printf("stopGraph begins\n");
+    self.mediapipeGraph.delegate = nil;
+    [self.mediapipeGraph cancel];
+    // Ignore errors since we're cleaning up.
+    [self.mediapipeGraph closeAllInputStreamsWithError:nil];
+    [self.mediapipeGraph waitUntilDoneWithError:nil];
+    printf("stopGraph ends\n");
+}
+
 #pragma mark - MPPGraphDelegate methods
 
 - (void)mediapipeGraph:(MPPGraph*)graph
@@ -242,6 +259,27 @@ void geometryNotifier(double pitch, double yaw, double roll, double distance) {
   if (streamName == kOutputStream) {
     // Display the captured image on the screen.
     //CVPixelBufferRelease(pixelBuffer);
+
+    if (!_writer.isOpened()) {
+        int fourcc = cv::VideoWriter::fourcc('m', 'p', '4', 'v');//mp4
+        double rate = 60; // frame rate
+        int capture_width = 1080;
+        int capture_height = 1920;
+        //NSString *mp4_path = [NSTemporaryDirectory() stringByAppendingPathComponent:[[NSUUID UUID] UUIDString]];
+        //SString *documentsDirectory = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) firstObject];
+        NSString *file_name = [[[NSUUID UUID] UUIDString] stringByAppendingString:@".mp4"];
+        NSString *mp4_path = [self.asset_path stringByAppendingPathComponent:file_name]; //[documentsDirectory stringByAppendingPathComponent:@"/asset/tmp.mp4"];
+        self.source_file_path = mp4_path;
+        std::remove([mp4_path UTF8String]);
+        printf("mp4 path : %s\n", [mp4_path UTF8String]);
+        _writer.open([mp4_path UTF8String],
+                    fourcc,
+                    rate,
+                    cv::Size(capture_width, capture_height));
+    }
+    cv::Mat targetImage = [MOImageConverter toBgrMatFromPixelBuf:pixelBuffer];
+    _writer.write(targetImage);
+
     CVPixelBufferRetain(pixelBuffer);
     CVPixelBufferRelease(pixelBuffer);
   }
@@ -333,6 +371,15 @@ void geometryNotifier(double pitch, double yaw, double roll, double distance) {
 #pragma mark - MPPInputSourceDelegate methods
 
 - (void)feed:(CMSampleBufferRef)sampleBuffer {
+    if (self.is_running == false) {
+        self.set_start_time = true;
+        self.mediapipeGraph = [[self class] loadGraphFromResource:kGraphName];
+        self.mediapipeGraph.delegate = self;
+        // Set maxFramesInFlight to a small value to avoid memory contention for real-time processing.
+        self.mediapipeGraph.maxFramesInFlight = 12;
+        [self startGraph];
+        self.is_running = true;
+    }
     CVPixelBufferRef imageBuffer = CMSampleBufferGetImageBuffer(sampleBuffer);
     CMTime timestamp = CMSampleBufferGetPresentationTimeStamp(sampleBuffer);
     if (self.set_start_time) {
@@ -350,11 +397,21 @@ void geometryNotifier(double pitch, double yaw, double roll, double distance) {
                               }
 }
 
-- (NSString *)stop {
+- (nonnull DetectionResult *)stop {
     NSString *ret_string = [NSString stringWithCString:self.moface_calculator->getFaceObservation().c_str()];
     self.moface_calculator->reset();
     self.set_start_time = true;
-    return ret_string;
+    if (_writer.isOpened()) {
+        _writer.release();
+    }
+    [self stopGraph];
+    self.is_running = false;
+
+    DetectionResult *result = [[DetectionResult alloc] init];
+    result.face_observation = ret_string;
+    result.source_file_path = self.source_file_path;
+
+    return result;
 }
 
 @end

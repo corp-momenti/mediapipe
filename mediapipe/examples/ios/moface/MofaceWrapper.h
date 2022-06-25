@@ -49,10 +49,17 @@ typedef void(^SignalCallback)(
     CGPoint point
 );
 
+@interface DetectionResult : NSObject
+    @property(nonatomic) NSString *face_observation;
+    @property(nonatomic) NSString *source_file_path;
+@end
+
 @interface MofaceWrapper : NSObject
-    - (nonnull instancetype)init;
+    - (instancetype)init NS_UNAVAILABLE;
+    // assetPath must include the trailing backslash
+    - (nonnull instancetype)initWithAssetsPath:(NSString *) assetPath;
     - (void)setCallbacks:(EventCallback)eventCallback signalCallback:(SignalCallback)signalCallback warningCallback:(WarningCallback)warningCallback;
     - (void)provideHint:(DetectionHintType) hint;
     - (void)feed:(CMSampleBufferRef)sampleBuffer;
-    - (nonnull NSString *)stop;
+    - (nonnull DetectionResult *)stop;
 @end

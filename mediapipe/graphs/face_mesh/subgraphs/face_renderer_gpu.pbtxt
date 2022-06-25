@@ -29,7 +29,7 @@ node {
   output_stream: "RENDER_DATA:detections_render_data"
   node_options: {
     [type.googleapis.com/mediapipe.DetectionsToRenderDataCalculatorOptions] {
-      thickness: 4.0
+      thickness: 0.0
       color { r: 0 g: 255 b: 0 }
     }
   }
@@ -55,7 +55,7 @@ node {
     [type.googleapis.com/mediapipe.LandmarksToRenderDataCalculatorOptions] {
       landmark_color { r: 255 g: 0 b: 0 }
       connection_color { r: 0 g: 255 b: 0 }
-      thickness: 2
+      thickness: 0.0
       visualize_landmark_depth: false
     }
   }
@@ -80,7 +80,7 @@ node {
     [type.googleapis.com/mediapipe.RectToRenderDataCalculatorOptions] {
       filled: false
       color { r: 255 g: 0 b: 0 }
-      thickness: 4.0
+      thickness: 0.0
     }
   }
 }
