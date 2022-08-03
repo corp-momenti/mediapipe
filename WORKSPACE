@@ -235,10 +235,10 @@ http_archive(
 # '-DBUILD_PROTOBUF=OFF -DBUILD_opencv_dnn=OFF'.
 http_archive(
     name = "ios_opencv",
-    sha256 = "7dd536d06f59e6e1156b546bd581523d8df92ce83440002885ec5abc06558de2",
+    sha256 = "7044e0de4979d2fb44bb027fc24c104576aa3ff52da9b84dd0a903725bab934f",
     build_file = "@//third_party:opencv_ios.BUILD",
     type = "zip",
-    url = "https://github.com/opencv/opencv/releases/download/3.2.0/opencv-3.2.0-ios-framework.zip",
+    url = "https://demo.integ.momenti.dev/opencv2.xcframework.zip",
 )
 
 http_archive(
@@ -259,8 +259,8 @@ http_archive(
 
 http_archive(
     name = "build_bazel_rules_apple",
-    sha256 = "77e8bf6fda706f420a55874ae6ee4df0c9d95da6c7838228b26910fc82eea5a2",
-    url = "https://github.com/bazelbuild/rules_apple/releases/download/0.32.0/rules_apple.0.32.0.tar.gz",
+    sha256 = "36072d4f3614d309d6a703da0dfe48684ec4c65a89611aeb9590b45af7a3e592",
+    url = "https://github.com/bazelbuild/rules_apple/releases/download/1.0.1/rules_apple.1.0.1.tar.gz",
     patches = [
         # Bypass checking ios unit test runner when building MP ios applications.
         "@//third_party:build_bazel_rules_apple_bypass_test_runner_check.diff"
@@ -379,12 +379,15 @@ http_archive(
 
 # Tensorflow repo should always go after the other external dependencies.
 # 2022-02-15
-_TENSORFLOW_GIT_COMMIT = "a3419acc751dfc19caf4d34a1594e1f76810ec58"
-_TENSORFLOW_SHA256 = "b95b2a83632d4055742ae1a2dcc96b45da6c12a339462dbc76c8bca505308e3a"
+# _TENSORFLOW_GIT_COMMIT = "a3419acc751dfc19caf4d34a1594e1f76810ec58"
+# _TENSORFLOW_SHA256 = "b95b2a83632d4055742ae1a2dcc96b45da6c12a339462dbc76c8bca505308e3a"
+_TENSORFLOW_RELEASE = "2.9.1"
+_TENSORFLOW_GIT_TAG = "v%s" % _TENSORFLOW_RELEASE
+_TENSORFLOW_SHA256 = "6eaf86ead73e23988fe192da1db68f4d3828bcdd0f3a9dc195935e339c95dbdc"
 http_archive(
     name = "org_tensorflow",
     urls = [
-      "https://github.com/tensorflow/tensorflow/archive/%s.tar.gz" % _TENSORFLOW_GIT_COMMIT,
+      "https://github.com/tensorflow/tensorflow/archive/%s.tar.gz" % _TENSORFLOW_GIT_TAG,
     ],
     patches = [
         "@//third_party:org_tensorflow_compatibility_fixes.diff",
@@ -394,7 +397,7 @@ http_archive(
     patch_args = [
         "-p1",
     ],
-    strip_prefix = "tensorflow-%s" % _TENSORFLOW_GIT_COMMIT,
+    strip_prefix = "tensorflow-%s" % _TENSORFLOW_RELEASE,
     sha256 = _TENSORFLOW_SHA256,
 )
 

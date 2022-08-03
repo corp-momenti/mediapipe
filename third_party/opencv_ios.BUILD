@@ -7,12 +7,12 @@ exports_files(["LICENSE"])
 
 load(
     "@build_bazel_rules_apple//apple:apple.bzl",
-    "apple_static_framework_import",
+    "apple_static_xcframework_import",
 )
 
-apple_static_framework_import(
+apple_static_xcframework_import(
     name = "OpencvFramework",
-    framework_imports = glob(["opencv2.framework/**"]),
+    xcframework_imports = glob(["opencv2.xcframework/**"]),
     visibility = ["//visibility:public"],
 )
 
@@ -21,10 +21,10 @@ objc_library(
     deps = [":OpencvFramework"],
 )
 
-cc_library(
-    name = "opencv",
+[cc_library(
+    name = "opencv_" + arch,
     hdrs = glob([
-        "opencv2.framework/Versions/A/Headers/**/*.h*",
+        "opencv2.framework/" + arch + "/opencv2.framework/Versions/A/Headers/**/*.h*",
     ]),
     copts = [
         "-std=c++11",
@@ -42,7 +42,11 @@ cc_library(
         "-framework CoreVideo",
         "-framework QuartzCore",
     ],
-    strip_include_prefix = "opencv2.framework/Versions/A/Headers",
+    strip_include_prefix = "opencv2.xcframework/" + arch + "/opencv2.framework/Versions/A/Headers",
     visibility = ["//visibility:public"],
     deps = [":opencv_objc_lib"],
-)
+) for arch in [
+    "ios-x86_64-simulator",
+    "ios-arm64",
+    "ios-arm64-simulator",
+]]
